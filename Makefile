@@ -74,7 +74,7 @@ devnet-up-deploy:
 .PHONY: devnet-up-deploy
 
 devnet-down:
-	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) docker-compose -f docker-compose-devnet.yml stop)
+	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) podman-compose -f docker-compose-devnet.yml stop)
 .PHONY: devnet-down
 
 testnet-down:
@@ -84,7 +84,7 @@ testnet-down:
 devnet-clean:
 	rm -rf ./packages/contracts-bedrock/deployments/devnetL1
 	rm -rf ./.devnet
-	cd ./ops-bedrock && docker-compose -f docker-compose-devnet.yml down
+	cd ./ops-bedrock && podman-compose -f docker-compose-devnet.yml down
 	docker image ls 'ops-bedrock*' --format='{{.Repository}}' | xargs -r docker rmi
 	docker volume ls --filter name=ops-bedrock --format='{{.Name}}' | xargs -r docker volume rm
 .PHONY: devnet-clean
@@ -98,7 +98,8 @@ testnet-clean:
 .PHONY: testnet-clean
 
 devnet-logs:
-	@(cd ./ops-bedrock && docker-compose -f docker-compose-devnet.yml logs -f)
+	# @(cd ./ops-bedrock && docker-compose -f docker-compose-devnet.yml logs -f)
+	@(cd ./ops-bedrock && podman-compose -f docker-compose-devnet.yml logs -f)
 	.PHONY: devnet-logs
 
 testnet-logs:

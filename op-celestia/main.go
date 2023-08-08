@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"os"
 
-	openrpc "github.com/rollkit/celestia-openrpc"
-	"github.com/rollkit/celestia-openrpc/types/share"
+	openrpc "github.com/dndll/near-openrpc"
+	"github.com/dndll/near-openrpc/types/share"
 )
 
 func main() {

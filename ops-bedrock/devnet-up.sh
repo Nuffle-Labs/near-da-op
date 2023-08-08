@@ -37,6 +37,9 @@ CONTRACTS_BEDROCK="$PWD/packages/contracts-bedrock"
 NETWORK=devnetL1
 DEVNET="$PWD/.devnet"
 
+COMPOSE="docker-compose"
+COMPOSE="podman-compose"
+
 # Helper method that waits for a given URL to be up. Can't use
 # cURL's built-in retry logic because connection reset errors
 # are ignored unless you're using a very recent version of cURL
@@ -82,8 +85,8 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up L1..."
-  DOCKER_BUILDKIT=1 docker-compose -f docker-compose-devnet.yml build --progress plain
-  docker-compose -f docker-compose-devnet.yml up -d l1
+  DOCKER_BUILDKIT=1 $COMPOSE -f docker-compose-devnet.yml build
+  $COMPOSE -f docker-compose-devnet.yml up -d l1
   wait_up $L1_URL
 )
 
@@ -91,7 +94,7 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up L2..."
-  docker-compose -f docker-compose-devnet.yml up -d l2
+  $COMPOSE -f docker-compose-devnet.yml up -d l2
   wait_up $L2_URL
 )
 
@@ -101,14 +104,14 @@ L2OO_ADDRESS="0x6900000000000000000000000000000000000000"
 (
   cd ops-bedrock
   echo "Bringing up devnet..."
-  docker-compose -f docker-compose-devnet.yml up -d da
-  wait_up http://localhost:26659/header/1
-  export CELESTIA_NODE_AUTH_TOKEN="$(docker exec ops-bedrock-da-1 celestia bridge auth admin --node.store /bridge)"
+  # $COMPOSE -f docker-compose-devnet.yml up -d da
+  # wait_up http://localhost:26659/header/1
+  # export CELESTIA_NODE_AUTH_TOKEN="$(docker exec ops-bedrock-da-1 celestia bridge auth admin --node.store /bridge)"
   L2OO_ADDRESS="$L2OO_ADDRESS" \
-      docker-compose -f docker-compose-devnet.yml up -d op-proposer op-batcher
+      $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher
 
   echo "Bringing up stateviz webserver..."
-  docker-compose -f docker-compose-devnet.yml up -d stateviz
+  $COMPOSE -f docker-compose-devnet.yml up -d stateviz
 )
 
 echo "Devnet ready."

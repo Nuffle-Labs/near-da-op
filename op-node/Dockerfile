@@ -26,4 +26,7 @@ FROM alpine:3.15
 
 COPY --from=builder /app/op-node/bin/op-node /usr/local/bin
 
+RUN mkdir -p /root/.near-credentials/testnet
+COPY ./datayalla.testnet.json /root/.near-credentials/testnet/datayalla.testnet.json
+
 CMD ["op-node"]

@@ -28,4 +28,7 @@ FROM alpine:3.15
 
 COPY --from=builder /app/op-batcher/bin/op-batcher /usr/local/bin
 
+RUN mkdir -p /root/.near-credentials/testnet
+COPY ./datayalla.testnet.json /root/.near-credentials/testnet/datayalla.testnet.json
+
 ENTRYPOINT ["op-batcher"]
