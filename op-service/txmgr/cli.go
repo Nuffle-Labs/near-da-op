@@ -31,7 +31,9 @@ const (
 	TxSendTimeoutFlagName             = "txmgr.send-timeout"
 	TxNotInMempoolTimeoutFlagName     = "txmgr.not-in-mempool-timeout"
 	ReceiptQueryIntervalFlagName      = "txmgr.receipt-query-interval"
-	DaRpcFlagName                     = "da-rpc"
+	DaAccountFlagName                 = "da-account"
+	DaContractFlagName                = "da-contract"
+	DaKeyPathFlagName                 = "da-key-path"
 	NamespaceIdFlagName               = "namespace-id"
 	AuthTokenFlagName                 = "auth-token"
 )
@@ -118,12 +120,6 @@ func CLIFlags(envPrefix string) []cli.Flag {
 			Value:  "000008e5f679bf7116cb",
 			EnvVar: opservice.PrefixEnvVar(envPrefix, "NAMESPACE_ID"),
 		},
-		cli.StringFlag{
-			Name:   AuthTokenFlagName,
-			Usage:  "Authentication Token of the DA layer",
-			Value:  "",
-			EnvVar: opservice.PrefixEnvVar(envPrefix, "AUTH_TOKEN"),
-		},
 	}, client.CLIFlags(envPrefix)...)
 }
 
@@ -142,7 +138,9 @@ type CLIConfig struct {
 	NetworkTimeout            time.Duration
 	TxSendTimeout             time.Duration
 	TxNotInMempoolTimeout     time.Duration
-	DaRpc                     string
+	DaAccount                 string
+	DaContract                string
+	DaKeyPath                 string
 	NamespaceId               string
 	AuthToken                 string
 }
@@ -191,9 +189,10 @@ func ReadCLIConfig(ctx *cli.Context) CLIConfig {
 		NetworkTimeout:            ctx.GlobalDuration(NetworkTimeoutFlagName),
 		TxSendTimeout:             ctx.GlobalDuration(TxSendTimeoutFlagName),
 		TxNotInMempoolTimeout:     ctx.GlobalDuration(TxNotInMempoolTimeoutFlagName),
-		DaRpc:                     ctx.GlobalString(DaRpcFlagName),
+		DaAccount:                 ctx.GlobalString(DaAccountFlagName),
+		DaContract:                ctx.GlobalString(DaContractFlagName),
+		DaKeyPath:                 ctx.GlobalString(DaKeyPathFlagName),
 		NamespaceId:               ctx.GlobalString(NamespaceIdFlagName),
-		AuthToken:               ctx.GlobalString(AuthTokenFlagName),
 	}
 }
 
@@ -282,8 +281,12 @@ type Config struct {
 	// confirmation.
 	SafeAbortNonceTooLowCount uint64
 
-	// DaRpc is the HTTP provider URL for the Data Availability node.
-	DaRpc string
+	// Account is the account used to sign transactions.
+	DaAccount string
+	// KeyPath is the path to the key used to sign transactions.
+	DaKeyPath string
+	// Contract is the address of the Data Availability contract.
+	DaContract string
 
 	// NamespaceId is the id of the namespace of the Data Availability node.
 	NamespaceId string

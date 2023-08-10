@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../near-openrpc"
+		}
+	],
+	"settings": {
+		"editorconfig.generateAuto": false,
+		"git.ignoreLimitWarning": true
+	}
+}

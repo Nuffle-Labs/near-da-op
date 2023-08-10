@@ -33,11 +33,23 @@ var (
 		Usage:  "HTTP provider URL for Rollup node",
 		EnvVar: opservice.PrefixEnvVar(envVarPrefix, "ROLLUP_RPC"),
 	}
-	DaRpcFlag = cli.StringFlag{
-		Name:     "da-rpc",
-		Usage:    "HTTP provider URL for DA node",
+	DaAccountFlag = cli.StringFlag{
+		Name:     "da-account",
+		Usage:    "Data Availability Signer",
 		Required: true,
-		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_RPC"),
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_ACCOUNT"),
+	}
+	DaContractFlag = cli.StringFlag{
+		Name:     "da-contract",
+		Usage:    "Data Availability Contract",
+		Required: true,
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_CONTRACT"),
+	}
+	DaKeypathFlag = cli.StringFlag{
+		Name:     "da-key-path",
+		Required: true,
+		Usage:    "Key path for sending messages to the DA node",
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_KEY_PATH"),
 	}
 	SubSafetyMarginFlag = cli.Uint64Flag{
 		Name: "sub-safety-margin",
@@ -97,7 +109,9 @@ var requiredFlags = []cli.Flag{
 	L1EthRpcFlag,
 	L2EthRpcFlag,
 	RollupRpcFlag,
-	DaRpcFlag,
+	DaAccountFlag,
+	DaContractFlag,
+	DaKeypathFlag,
 	SubSafetyMarginFlag,
 	PollIntervalFlag,
 }

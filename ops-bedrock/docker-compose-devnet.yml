@@ -69,9 +69,10 @@ services:
       --metrics.port=7300
       --pprof.enabled
       --rpc.enable-admin
-      --da-rpc=https://rpc.testnet.near.org
+      --da-account=datayalla.testnet
+      --da-contract=da2.datayalla.testnet
+      --da-key-path=/root/.near-credentials/testnet/datayalla.testnet.json
       --namespace-id=000008e5f679bf7116cb
-      --auth-token=$CELESTIA_NODE_AUTH_TOKEN
     environment:
       OP_NODE_AUTH_TOKEN: $CELESTIA_NODE_AUTH_TOKEN
     ports:
@@ -84,6 +85,7 @@ services:
       - '${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt'
       - '${PWD}/test-jwt-secret.txt:/config/test-jwt-secret.txt'
       - '${PWD}/../.devnet/rollup.json:/rollup.json'
+      - ~/.near-credentials/testnet/datayalla.testnet.json:/root/.near-credentials/testnet/datayalla.testnet.json
       - op_log:/op_log
 
   op-proposer:
@@ -97,6 +99,8 @@ services:
     ports:
       - '6062:6060'
       - '7302:7300'
+    volumes:
+      - ~/.near-credentials/testnet/datayalla.testnet.json:/root/.near-credentials/testnet/datayalla.testnet.json
     environment:
       OP_PROPOSER_L1_ETH_RPC: http://l1:8545
       OP_PROPOSER_ROLLUP_RPC: http://op-node:8545
@@ -111,7 +115,9 @@ services:
       OP_PROPOSER_METRICS_ENABLED: 'true'
       OP_PROPOSER_ALLOW_NON_FINALIZED: 'false'
       OP_PROPOSER_NAMESPACE_ID: '000008e5f679bf7116cb'
-      OP_PROPOSER_DA_RPC: https://rpc.testnet.near.org
+      OP_PROPOSER_DA_ACCOUNT: datayalla.testnet
+      OP_PROPOSER_DA_CONTRACT: da2.datayalla.testnet
+      OP_PROPOSER_DA_KEY_PATH: /root/.near-credentials/testnet/datayalla.testnet.json
 
   op-batcher:
     depends_on:
@@ -128,6 +134,8 @@ services:
       - '6061:6060'
       - '7301:7300'
       - '6545:8545'
+    volumes:
+      - ~/.near-credentials/testnet/datayalla.testnet.json:/root/.near-credentials/testnet/datayalla.testnet.json
     environment:
       OP_BATCHER_L1_ETH_RPC: http://l1:8545
       OP_BATCHER_L2_ETH_RPC: http://l2:8545
@@ -149,8 +157,9 @@ services:
       OP_BATCHER_METRICS_ENABLED: 'true'
       OP_BATCHER_RPC_ENABLE_ADMIN: 'true'
       OP_BATCHER_NAMESPACE_ID: '000008e5f679bf7116cb'
-      OP_BATCHER_DA_RPC: https://rpc.testnet.near.org
-      OP_BATCHER_AUTH_TOKEN: $CELESTIA_NODE_AUTH_TOKEN
+      OP_BATCHER_DA_ACCOUNT: datayalla.testnet
+      OP_BATCHER_DA_CONTRACT: da2.datayalla.testnet
+      OP_BATCHER_DA_KEY_PATH: /root/.near-credentials/testnet/datayalla.testnet.json
 
   stateviz:
     build:

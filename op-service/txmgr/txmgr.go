@@ -111,8 +111,12 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 	if err != nil {
 		return nil, err
 	}
-
-	daClient, err := openrpc.NewClient(context.Background(), cfg.DaRpc, cfg.AuthToken)
+	config, err := openrpc.BuildConfig("testnet")
+	if err != nil {
+		return nil, err
+	}
+	config.KeyPath = cfg.DaKeyPath
+	daClient, err := openrpc.NewClient(context.Background(), *config, cfg.DaContract, cfg.DaAccount)
 	if err != nil {
 		return nil, err
 	}

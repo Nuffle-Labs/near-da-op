@@ -99,7 +99,7 @@ testnet-clean:
 
 devnet-logs:
 	# @(cd ./ops-bedrock && docker-compose -f docker-compose-devnet.yml logs -f)
-	@(cd ./ops-bedrock && podman-compose -f docker-compose-devnet.yml logs -f)
+	@(cd ./ops-bedrock && docker-compose -f docker-compose-devnet.yml logs -f)
 	.PHONY: devnet-logs
 
 testnet-logs:

@@ -27,4 +27,8 @@ FROM alpine:3.15
 
 COPY --from=builder /app/op-proposer/bin/op-proposer /usr/local/bin
 
+RUN mkdir -p /root/.near-credentials/testnet
+RUN mkdir -p /root/.near-credentials/mainnet
+RUN mkdir -p /root/.near-credentials/localnet
+
 CMD ["op-proposer"]

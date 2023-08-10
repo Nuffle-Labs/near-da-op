@@ -38,11 +38,23 @@ var (
 			"creating a new batch",
 		EnvVar: opservice.PrefixEnvVar(envVarPrefix, "POLL_INTERVAL"),
 	}
-	DaRpcFlag = cli.StringFlag{
-		Name:     "da-rpc",
-		Usage:    "HTTP provider URL for DA node",
+	DaAccountFlag = cli.StringFlag{
+		Name:     "da-account",
+		Usage:    "Data Availability Signer",
 		Required: true,
-		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_RPC"),
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_ACCOUNT"),
+	}
+	DaContractFlag = cli.StringFlag{
+		Name:     "da-contract",
+		Usage:    "Data Availability Contract",
+		Required: true,
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_CONTRACT"),
+	}
+	DaKeypathFlag = cli.StringFlag{
+		Name:     "da-key-path",
+		Usage:    "Key path for sending messages to the DA node",
+		Required: true,
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_KEY_PATH"),
 	}
 	// Optional flags
 	AllowNonFinalizedFlag = cli.BoolFlag{
@@ -59,7 +71,9 @@ var requiredFlags = []cli.Flag{
 	RollupRpcFlag,
 	L2OOAddressFlag,
 	PollIntervalFlag,
-	DaRpcFlag,
+	DaAccountFlag,
+	DaContractFlag,
+	DaKeypathFlag,
 }
 
 var optionalFlags = []cli.Flag{

@@ -1,0 +1,8 @@
+{
+  "account_id": "datayalla.testnet",
+  "seed_phrase_hd_path": "m/44'/397'/0'",
+  "master_seed_phrase": "duty smooth journey steak obtain plastic captain sponsor life better gospel across",
+  "implicit_account_id": "720aa82e8df802c6c6f87acdab14fc964f5d86c6f8f00bf1998e6fed6101e09f",
+  "public_key": "ed25519:8gAuMPvzhPmfh4yFhUKbNvt3T1cVxeoHzx74GpGPFGFg",
+  "private_key": "ed25519:29mAtBXrRgjpD17qu7yXZ5FJTiTuApQE8AUfMguLM65G4c4GCUvkCKoh1CuaABR48WAC4z8J5RNgCx2Pd6ye1CLv"
+}

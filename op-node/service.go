@@ -58,8 +58,9 @@ func NewConfig(ctx *cli.Context, log log.Logger) (*node.Config, error) {
 	l2SyncEndpoint := NewL2SyncEndpointConfig(ctx)
 
 	daCfg, err := rollup.NewDAConfig(
-		ctx.GlobalString(flags.DaRPC.Name),
-		ctx.GlobalString(flags.AuthToken.Name),
+		ctx.GlobalString(flags.DaAccount.Name),
+		ctx.GlobalString(flags.DaContract.Name),
+		ctx.GlobalString(flags.DaKeypath.Name),
 		ctx.GlobalString(flags.NamespaceId.Name),
 	)
 	if err != nil {
