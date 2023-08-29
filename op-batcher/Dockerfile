@@ -24,9 +24,12 @@ ARG TARGETOS TARGETARCH
 
 RUN make op-batcher VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
+RUN mv /app/op-batcher/bin/op-batcher /
+RUN rm -rf /app
+
 FROM alpine:3.15
 
-COPY --from=builder /app/op-batcher/bin/op-batcher /usr/local/bin
+COPY --from=builder /op-batcher /usr/local/bin
 
 RUN mkdir -p /root/.near-credentials/testnet
 RUN mkdir -p /root/.near-credentials/mainnet

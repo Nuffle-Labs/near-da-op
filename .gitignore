@@ -36,6 +36,12 @@ packages/integration-tests-bedrock/artifacts
 packages/contracts-bedrock/deployments/devnetL1
 packages/contracts-bedrock/deployments/anvil
 
+ops-bedrock-goerli/keys.json
+ops-bedrock-goerli/jwt.txt
+ops-bedrock-goerli/redis-data
+ops-bedrock-goerli/blockscout-db-data
+ops-bedrock-goerli/terraform
+.goerli/
 # vim
 *.sw*
 

@@ -23,9 +23,12 @@ ARG TARGETOS TARGETARCH
 
 RUN make op-proposer VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
+RUN mv /app/op-proposer/bin/op-proposer /
+RUN rm -rf /app
+
 FROM alpine:3.15
 
-COPY --from=builder /app/op-proposer/bin/op-proposer /usr/local/bin
+COPY --from=builder /op-proposer /usr/local/bin
 
 RUN mkdir -p /root/.near-credentials/testnet
 RUN mkdir -p /root/.near-credentials/mainnet

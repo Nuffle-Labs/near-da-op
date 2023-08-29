@@ -22,9 +22,12 @@ ARG TARGETOS TARGETARCH
 
 RUN make op-node VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
+RUN mv /app/op-node/bin/op-node /
+RUN rm -rf /app
+
 FROM alpine:3.15
 
-COPY --from=builder /app/op-node/bin/op-node /usr/local/bin
+COPY --from=builder /op-node /usr/local/bin
 
 RUN mkdir -p /root/.near-credentials/testnet
 RUN mkdir -p /root/.near-credentials/mainnet

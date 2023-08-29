@@ -69,6 +69,10 @@ testnet-up:
 	@bash ./ops-bedrock/testnet-up.sh
 .PHONY: testnet-up
 
+goerli-up:
+	@bash ./ops-bedrock-goerli/up.sh
+.PHONY: goerli-up
+
 devnet-up-deploy:
 	PYTHONPATH=./bedrock-devnet python3 ./bedrock-devnet/main.py --monorepo-dir=.
 .PHONY: devnet-up-deploy
@@ -78,8 +82,12 @@ devnet-down:
 .PHONY: devnet-down
 
 testnet-down:
-	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) docker-compose -f docker-compose-testnet.yml stop)
+	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) podman-compose -f docker-compose-testnet.yml stop)
 .PHONY: testnet-down
+
+goerli-down:
+	@(cd ./ops-bedrock-goerli && GENESIS_TIMESTAMP=$(shell date +%s) podman-compose stop)
+.PHONY: goerli-down
 
 devnet-clean:
 	rm -rf ./packages/contracts-bedrock/deployments/devnetL1
@@ -92,10 +100,17 @@ devnet-clean:
 testnet-clean:
 	rm -rf ./packages/contracts-bedrock/deployments/devnetL1
 	rm -rf ./.devnet
-	cd ./ops-bedrock && docker-compose -f docker-compose-testnet.yml down
+	cd ./ops-bedrock && podman-compose -f docker-compose-testnet.yml down
 	docker image ls 'ops-bedrock*' --format='{{.Repository}}' | xargs -r docker rmi
 	docker volume ls --filter name=ops-bedrock --format='{{.Name}}' | xargs -r docker volume rm
 .PHONY: testnet-clean
+
+goerli-clean:
+	rm -rf ./.goerli
+	cd ./ops-bedrock-goerli && podman-compose down
+	docker image ls 'ops-bedrock*' --format='{{.Repository}}' | xargs -r docker rmi
+	docker volume ls --filter name=ops-bedrock --format='{{.Name}}' | xargs -r docker volume rm
+.PHONY: goerli-clean
 
 devnet-logs:
 	# @(cd ./ops-bedrock && docker-compose -f docker-compose-devnet.yml logs -f)
