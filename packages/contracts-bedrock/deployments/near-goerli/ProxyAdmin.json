@@ -309,7 +309,7 @@
   "transactionHash": "0xfa0dfbf0f1fe43524a52f8fe56c8a44a968584f2aae379c06d43dad8c0644650",
   "receipt": {
     "to": null,
-    "from": "0x53EcF6E5918Fa051213dc5c072D52864f1A3588c",
+    "from": "0x53ecf6e5918fa051213dc5c072d52864f1a3588c",
     "contractAddress": "0x5cF0450cdb456cF6E50B021F7b537acc3818ef25",
     "transactionIndex": 1,
     "gasUsed": "1483961",
@@ -352,7 +352,7 @@
     "byzantium": true
   },
   "args": [
-    "0x53EcF6E5918Fa051213dc5c072D52864f1A3588c"
+    "0x53ecf6e5918fa051213dc5c072d52864f1a3588c"
   ],
   "numDeployments": 1,
   "solcInputHash": "8c637922e968b76bd09b92fd2b9749d7",

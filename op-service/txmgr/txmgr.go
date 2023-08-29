@@ -12,16 +12,16 @@ import (
 	"sync"
 	"time"
 
+	openrpc "github.com/dndll/near-openrpc"
+	"github.com/dndll/near-openrpc/types/blob"
+	openrpcns "github.com/dndll/near-openrpc/types/namespace"
+	"github.com/dndll/near-openrpc/types/share"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	openrpc "github.com/rollkit/celestia-openrpc"
-	"github.com/rollkit/celestia-openrpc/types/blob"
-	openrpcns "github.com/rollkit/celestia-openrpc/types/namespace"
-	"github.com/rollkit/celestia-openrpc/types/share"
 
 	"github.com/ethereum-optimism/optimism/op-celestia/celestia"
 	"github.com/ethereum-optimism/optimism/op-service/txmgr/metrics"
@@ -228,28 +228,33 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 	// writes the state commitment data to ethereum.
 	if candidate.To.Hex() == "0xfF00000000000000000000000000000000000000" {
 		dataBlob, err := blob.NewBlobV0(m.namespace.Bytes(), candidate.TxData)
+		if err != nil {
+			m.l.Warn("unable to create blob", "err", err)
+			return nil, err
+		}
 		com, err := blob.CreateCommitment(dataBlob)
+		dataBlob.Commitment = com
 		if err != nil {
-			m.l.Warn("unable to create blob commitment to celestia", "err", err)
+			m.l.Warn("unable to create blob commitment", "err", err)
 			return nil, err
 		}
-		err = m.daClient.Header.SyncWait(ctx)
+		// err = m.daClient.Header.SyncWait(ctx)
+		// if err != nil {
+		// 	m.l.Warn("unable to wait for header sync", "err", err)
+		// 	return nil, err
+		// }
+		res, err := m.daClient.Submit(ctx, []*blob.Blob{dataBlob})
 		if err != nil {
-			m.l.Warn("unable to wait for celestia header sync", "err", err)
+			m.l.Warn("unable to publish tx to near", "err", err)
 			return nil, err
 		}
-		height, err := m.daClient.Blob.Submit(ctx, []*blob.Blob{dataBlob})
-		if err != nil {
-			m.l.Warn("unable to publish tx to celestia", "err", err)
-			return nil, err
-		}
-		fmt.Printf("height: %v\n", height)
-		if height == 0 {
-			m.l.Warn("unexpected response from celestia got", "height", height)
+		fmt.Printf("res: %v\n", res)
+		if res.Code != 0 || res.TxHash == "" || res.Height == 0 {
+			m.l.Warn("unexpected response from near got", "res.Code", res.Code, "res.TxHash", res.TxHash, "res.Height", res.Height)
 			return nil, errors.New("unexpected response code")
 		}
 		frameRef := celestia.FrameRef{
-			BlockHeight: height,
+			BlockHeight:  res.Height,
 			TxCommitment: com,
 		}
 		frameRefData, _ := frameRef.MarshalBinary()

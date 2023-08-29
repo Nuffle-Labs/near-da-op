@@ -10,27 +10,6 @@ volumes:
   op_log:
 
 services:
-  l1:
-    build:
-      context: .
-      dockerfile: Dockerfile.l1
-      # cache_from:
-      #   - type=local,src=/tmp/l1-geth-cache
-      # cache_to:
-      #   - type=local,src=/tmp/l1-geth-cache
-      # tags:
-      #   - 'near/op-geth-l1:latest'
-    container_name: 'op-l1-goerli'
-    ports:
-      - '8545:8545'
-      - '7060:6060'
-    environment:
-      BLOCK_SIGNER_PRIVATE_KEY: ${SEQ_KEY}
-    volumes:
-      - 'l1_data:/db'
-      - '${PWD}/../data/.goerli/genesis.json:/genesis.json'
-      - '${PWD}/../data/jwt.txt:/config/jwt.txt'
-
   l2:
     build:
       context: .
@@ -43,13 +22,13 @@ services:
       #   - 'near/op-geth-l2:latest'
     container_name: 'op-l2-goerli'
     ports:
-      - '9545:8545'
+      - '8545:8545'
       - '8060:6060'
     environment:
       BLOCK_SIGNER_PRIVATE_KEY: ${SEQ_KEY}
     volumes:
       - 'l2_data:/db'
-      - '${PWD}/../data/.goerli/genesis.json:/genesis.json'
+      - '${PWD}/../data/genesis.json:/genesis.json'
       - '${PWD}/../data/jwt.txt:/config/jwt.txt'
     entrypoint: # pass the L2 specific flags by overriding the entry-point and adding extra arguments
       - '/bin/sh'
@@ -58,7 +37,6 @@ services:
 
   op-node:
     depends_on:
-      - l1
       - l2
     build:
       context: ../
@@ -91,12 +69,11 @@ services:
       --sequencer.enabled
       --sequencer.l1-confs=3
       --verifier.l1-confs=3
-      --p2p.sequencer.key=${SEQ_KEY}
+      --p2p.sequencer.key=d96f2ee74c8dd968d9dd89d54568417fad8d43267dae3ba0fdfcde0c95a38895
       --rollup.config=/rollup.json
       --rpc.addr=0.0.0.0
       --rpc.port=8545
       --p2p.disable
-      --snapshotlog.file=/op_log/snapshot.log
       --metrics.enabled
       --metrics.addr=0.0.0.0
       --metrics.port=7300
@@ -106,6 +83,7 @@ services:
       --da-contract=${DA_CONTRACT}
       --da-key-path=/root/.near-credentials/${DA_ACCOUNT}.json
       --namespace-id=000008e5f679bf7116cb
+      --snapshotlog.file=/op_log/snapshot.log
     ports:
       - '7545:8545'
       - '9003:9003'
@@ -114,14 +92,13 @@ services:
     volumes:
       - '${PWD}/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt'
       - '${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt'
-      - '${PWD}/../data/jwt.text:/config/jwt.txt'
-      - '${PWD}/../data/.goerli/rollup.json:/rollup.json'
-      - ~/.near-credentials/testnet/${DA_ACCOUNT}.json:/root/.near-credentials/${DA_ACCOUNT}.json
+      - '${PWD}/../data/jwt.txt:/config/jwt.txt'
+      - '${PWD}/../data/rollup.json:/rollup.json'
+      - ~/.near-credentials/testnet:/root/.near-credentials
       - op_log:/op_log
 
   op-proposer:
     depends_on:
-      - l1
       - l2
       - op-node
     build:
@@ -138,7 +115,7 @@ services:
       - '6062:6060'
       - '7302:7300'
     volumes:
-      - ~/.near-credentials/testnet/${DA_ACCOUNT}.json:/root/.near-credentials/${DA_ACCOUNT}.json
+      - ~/.near-credentials/testnet:/root/.near-credentials
     environment:
       OP_PROPOSER_L1_ETH_RPC: ${L1_RPC}
       OP_PROPOSER_PRIVATE_KEY: ${PROPOSER_KEY} # TODO: not used yet
@@ -160,7 +137,6 @@ services:
 
   op-batcher:
     depends_on:
-      - l1
       - l2
       - op-node
     build:
@@ -177,7 +153,7 @@ services:
       - '7301:7300'
       - '6545:8545'
     volumes:
-      - ~/.near-credentials/testnet/${DA_ACCOUNT}.json:/root/.near-credentials/${DA_ACCOUNT}.json
+      - ~/.near-credentials/testnet:/root/.near-credentials
     # healthcheck:
     #   test: ['CMD', 'wget', '-q', '-O', '-', 'http://da:26659/header/1']
     #   interval: 5s
@@ -239,7 +215,7 @@ services:
     container_name: 'blockscout-redis'
     command: redis-server
     volumes:
-      - ${PWD}/../data/redis-data:/data
+      - /mnt/data/redis-data:/data
 
   db:
     image: postgres:14
@@ -273,8 +249,8 @@ services:
       - ${PWD}/envs/common-blockscout.env
     environment:
       ETHEREUM_JSONRPC_VARIANT: 'geth'
-      ETHEREUM_JSONRPC_HTTP_URL: http://host.containers.internal:8545/
-      DATABASE_URL: postgresql://postgres:@host.containers.internal:7432/blockscout?ssl=false
+      ETHEREUM_JSONRPC_HTTP_URL: http://l2:8545/
+      DATABASE_URL: postgresql://postgres:@db:5432/blockscout?ssl=false
       ECTO_USE_SSL: 'false'
       SECRET_KEY_BASE: '56NtB48ear7+wMSf0IQuWDAAazhpb31qyc7GiyspBP2vh7t5zlCsF5QDv76chXeN'
     ports:

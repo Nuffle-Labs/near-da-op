@@ -29,8 +29,7 @@
 
 set -eu
 
-L1_URL="http://localhost:8545"
-L2_URL="http://localhost:9545"
+L2_URL="http://localhost:8545"
 
 OP_NODE="$PWD/op-node"
 CONTRACTS_BEDROCK="$PWD/packages/contracts-bedrock"
@@ -39,7 +38,6 @@ L2OO_ADDRESS="0x26604E39cB38aC2567793968E19BD04586005Ed6"
 
 # Set all the pkeys
 KEYS_PATH=$PWD/data/keys.json
-ADMIN_KEY=$(cat $KEYS_PATH | jq -r ".Admin.PrivateKey")
 SEQ_KEY=$(cat $KEYS_PATH | jq -r ".Sequencer.PrivateKey")
 PROPOSER_KEY=$(cat $KEYS_PATH | jq -r ".Proposer.PrivateKey")
 BATCHER_KEY=$(cat $KEYS_PATH | jq -r ".Batcher.PrivateKey")
@@ -47,10 +45,6 @@ BATCHER_KEY=$(cat $KEYS_PATH | jq -r ".Batcher.PrivateKey")
 DA_ACCOUNT="abc.topgunbakugo.testnet"
 DA_CONTRACT="da.topgunbakugo.testnet"
 
-if [ -z "$ADMIN_KEY" ]; then
-  echo "ADMIN_KEY not set"
-  exit 1
-fi
 if [ -z "$SEQ_KEY" ]; then
   echo "SEQ_KEY not set"
   exit 1
@@ -65,10 +59,10 @@ if [ -z "$BATCHER_KEY" ]; then
 fi
 
 NETWORK=goerli
-DATA="$PWD/data/.goerli"
+DATA="/mnt/data/.goerli"
 
 COMPOSE="docker-compose"
-COMPOSE="podman-compose"
+COMPOSE="docker compose"
 
 
 
@@ -142,14 +136,6 @@ echo "Bringing up blockscout..."
 $COMPOSE up -d blockscout
 popd
 
-# Bring up L1.
-# (
-#   cd ops-bedrock-goerli
-#   echo "Bringing up L1..."
-#   SEQ_KEY=$SEQ_KEY $COMPOSE up -d l1
-#   wait_up $L1_URL
-# )
-
 # # Bring up L2.
 # (
 #   cd ops-bedrock-goerli
@@ -161,20 +147,20 @@ popd
 
 
 # # Bring up everything else.
-# (
-#   cd ops-bedrock-goerli
-#   echo "Bringing up devnet..."
-#   L2OO_ADDRESS="$L2OO_ADDRESS" \
-#   SEQ_KEY="$SEQ_KEY" \
-#   PROPOSER_KEY="$PROPOSER_KEY" \
-#   BATCHER_KEY="$BATCHER_KEY" \
-#   DA_ACCOUNT="$DA_ACCOUNT" \
-#   DA_CONTRACT="$DA_CONTRACT" \
-#   L1_RPC="$L1_RPC" \
-#       $COMPOSE up -d op-proposer op-batcher
+(
+  cd ops-bedrock-goerli
+  echo "Bringing up devnet..."
+  L2OO_ADDRESS="$L2OO_ADDRESS" \
+  SEQ_KEY="$SEQ_KEY" \
+  PROPOSER_KEY="$PROPOSER_KEY" \
+  BATCHER_KEY="$BATCHER_KEY" \
+  DA_ACCOUNT="$DA_ACCOUNT" \
+  DA_CONTRACT="$DA_CONTRACT" \
+  L1_RPC="$L1_RPC" \
+      $COMPOSE up -d op-proposer op-batcher
 
-#   echo "Bringing up stateviz webserver..."
-#   $COMPOSE up -d stateviz
-# )
+  echo "Bringing up stateviz webserver..."
+  $COMPOSE up -d stateviz
+)
 
 # echo "Testnet ready."

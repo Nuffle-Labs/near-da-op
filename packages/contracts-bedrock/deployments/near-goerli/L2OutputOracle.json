@@ -434,7 +434,7 @@
   "transactionHash": "0x999dc0e0d154fc01c7e4768a3f764f154282c57815f339049bba49b47ddb9bc2",
   "receipt": {
     "to": null,
-    "from": "0x53EcF6E5918Fa051213dc5c072D52864f1A3588c",
+    "from": "0x53ecf6e5918fa051213dc5c072d52864f1a3588c",
     "contractAddress": "0xb45566A11BC2138346cda9B9B7219Eb0F2De793F",
     "transactionIndex": 10,
     "gasUsed": "1342787",
@@ -466,7 +466,7 @@
     0,
     0,
     "0xBc9cEdEb94481B232e4F3deA9e120efAAFA97dDC",
-    "0x53EcF6E5918Fa051213dc5c072D52864f1A3588c",
+    "0x53ecf6e5918fa051213dc5c072d52864f1a3588c",
     12
   ],
   "numDeployments": 1,
