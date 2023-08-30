@@ -245,10 +245,10 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 		// }
 		res, err := m.daClient.Submit(ctx, []*blob.Blob{dataBlob})
 		if err != nil {
-			m.l.Warn("unable to publish tx to near", "err", err)
+			m.l.Error("unable to publish blob to near", "err", err)
 			return nil, err
 		}
-		fmt.Printf("res: %v\n", res)
+
 		if res.Code != 0 || res.TxHash == "" || res.Height == 0 {
 			m.l.Warn("unexpected response from near got", "res.Code", res.Code, "res.TxHash", res.TxHash, "res.Height", res.Height)
 			return nil, errors.New("unexpected response code")
@@ -257,8 +257,12 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 			BlockHeight:  res.Height,
 			TxCommitment: com,
 		}
-		frameRefData, _ := frameRef.MarshalBinary()
-		candidate = TxCandidate{TxData: frameRefData, To: candidate.To, GasLimit: candidate.GasLimit}
+		frameRefData, err := frameRef.MarshalBinary()
+		if err != nil {
+			m.l.Warn("unable to marshal frame reference", "err", err)
+			return nil, err
+		}
+		candidate.TxData = frameRefData
 	}
 
 	tx, err := m.craftTx(ctx, candidate)
