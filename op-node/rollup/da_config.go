@@ -4,18 +4,17 @@ import (
 	"context"
 	"encoding/hex"
 
-	openrpc "github.com/rollkit/celestia-openrpc"
-	"github.com/rollkit/celestia-openrpc/types/share"
+	openrpc "github.com/dndll/near-openrpc"
+	openrpcns "github.com/dndll/near-openrpc/types/namespace"
+	"github.com/dndll/near-openrpc/types/share"
 )
 
 type DAConfig struct {
-	Rpc       string
-	Namespace share.Namespace
+	Namespace openrpcns.Namespace
 	Client    *openrpc.Client
-	AuthToken string
 }
 
-func NewDAConfig(rpc, token, ns string) (*DAConfig, error) {
+func NewDAConfig(account, contract, keyPath, ns string) (*DAConfig, error) {
 	nsBytes, err := hex.DecodeString(ns)
 	if err != nil {
 		return &DAConfig{}, err
@@ -25,15 +24,19 @@ func NewDAConfig(rpc, token, ns string) (*DAConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	config, err := openrpc.BuildConfig("testnet")
+	if err != nil {
+		return nil, err
+	}
+	config.KeyPath = keyPath
 
-	client, err := openrpc.NewClient(context.Background(), rpc, token)
+	client, err := openrpc.NewClient(context.Background(), *config, contract, account)
 	if err != nil {
 		return &DAConfig{}, err
 	}
 
 	return &DAConfig{
-		Namespace: namespace,
-		Rpc:       rpc,
+		Namespace: namespace.ToAppNamespace(),
 		Client:    client,
 	}, nil
 }

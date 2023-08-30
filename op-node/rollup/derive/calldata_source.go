@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/dndll/near-openrpc/types/share"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -146,11 +147,15 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 					log.Warn("unable to decode frame reference", "index", j, "err", err)
 					return nil, err
 				}
-				log.Info("requesting data from celestia", "namespace", hex.EncodeToString(daCfg.Namespace), "height", frameRef.BlockHeight)
-				blob, err := daCfg.Client.Blob.Get(context.Background(), frameRef.BlockHeight, daCfg.Namespace, frameRef.TxCommitment)
-				if err != nil {
-					return nil, NewResetError(fmt.Errorf("failed to resolve frame from celestia: %w", err))
+				log.Info("requesting data from near", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight)
+				blob, err := daCfg.Client.Get(context.Background(), daCfg.Namespace.Bytes(), uint64(frameRef.BlockHeight))
+				if !blob.Commitment.Equal(frameRef.TxCommitment) {
+					log.Warn("Likely blob commitments are wrong, they dont match!")
 				}
+				if err != nil {
+					return nil, NewResetError(fmt.Errorf("failed to resolve frame data from near: %w", err))
+				}
+
 				out = append(out, blob.Data)
 			} else {
 				out = append(out, tx.Data())

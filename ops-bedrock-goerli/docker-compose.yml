@@ -10,30 +10,30 @@ volumes:
   op_log:
 
 services:
-  l2:
-    build:
-      context: .
-      dockerfile: Dockerfile.l2
-      # cache_from:
-      #   - type=local,src=/tmp/l2-geth-cache
-      # cache_to:
-      #   - type=local,src=/tmp/l2-geth-cache
-      # tags:
-      #   - 'near/op-geth-l2:latest'
-    container_name: 'op-l2-goerli'
-    ports:
-      - '8545:8545'
-      - '8060:6060'
-    environment:
-      BLOCK_SIGNER_PRIVATE_KEY: ${SEQ_KEY}
-    volumes:
-      - 'l2_data:/db'
-      - '${PWD}/../data/genesis.json:/genesis.json'
-      - '${PWD}/../data/jwt.txt:/config/jwt.txt'
-    entrypoint: # pass the L2 specific flags by overriding the entry-point and adding extra arguments
-      - '/bin/sh'
-      - '/entrypoint.sh'
-      - '--authrpc.jwtsecret=/config/jwt.txt'
+  # l2:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.l2
+  #     # cache_from:
+  #     #   - type=local,src=/tmp/l2-geth-cache
+  #     # cache_to:
+  #     #   - type=local,src=/tmp/l2-geth-cache
+  #     # tags:
+  #     #   - 'near/op-geth-l2:latest'
+  #   container_name: 'op-l2-goerli'
+  #   ports:
+  #     - '8545:8545'
+  #     - '8060:6060'
+  #   environment:
+  #     BLOCK_SIGNER_PRIVATE_KEY: ${SEQ_KEY}
+  #   volumes:
+  #     - 'l2_data:/db'
+  #     - '${PWD}/../data/genesis.json:/genesis.json'
+  #     - '${PWD}/../data/jwt.txt:/config/jwt.txt'
+  #   entrypoint: # pass the L2 specific flags by overriding the entry-point and adding extra arguments
+  #     - '/bin/sh'
+  #     - '/entrypoint.sh'
+  #     - '--authrpc.jwtsecret=/config/jwt.txt'
 
   op-node:
     depends_on:
