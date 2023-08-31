@@ -6,7 +6,7 @@ require (
 	github.com/btcsuite/btcd v0.23.3
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0
-	github.com/dndll/near-openrpc v0.0.0-20230810084126-ee1ada2a815a
+	github.com/dndll/near-openrpc v0.0.0-20230831155813-150891be5f4f
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/ethereum-optimism/go-ethereum-hdwallet v0.1.3

@@ -73,6 +73,9 @@ goerli-up:
 	@bash ./ops-bedrock-goerli/up.sh
 .PHONY: goerli-up
 
+upgrade-near-components:
+	go get github.com/dndll/near-openrpc@near
+
 devnet-up-deploy:
 	PYTHONPATH=./bedrock-devnet python3 ./bedrock-devnet/main.py --monorepo-dir=.
 .PHONY: devnet-up-deploy

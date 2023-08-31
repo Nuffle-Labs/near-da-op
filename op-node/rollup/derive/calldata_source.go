@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/dndll/near-openrpc/types/share"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
