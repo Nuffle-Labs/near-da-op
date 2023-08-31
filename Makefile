@@ -78,15 +78,15 @@ devnet-up-deploy:
 .PHONY: devnet-up-deploy
 
 devnet-down:
-	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) podman-compose -f docker-compose-devnet.yml stop)
+	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) docker-compose -f docker-compose-devnet.yml stop)
 .PHONY: devnet-down
 
 testnet-down:
-	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) podman-compose -f docker-compose-testnet.yml stop)
+	@(cd ./ops-bedrock && GENESIS_TIMESTAMP=$(shell date +%s) docker-compose -f docker-compose-testnet.yml stop)
 .PHONY: testnet-down
 
 goerli-down:
-	@(cd ./ops-bedrock-goerli && GENESIS_TIMESTAMP=$(shell date +%s) podman-compose stop)
+	@(cd ./ops-bedrock-goerli && GENESIS_TIMESTAMP=$(shell date +%s) docker-compose stop)
 .PHONY: goerli-down
 
 devnet-clean:

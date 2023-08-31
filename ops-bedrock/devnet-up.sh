@@ -37,8 +37,8 @@ CONTRACTS_BEDROCK="$PWD/packages/contracts-bedrock"
 NETWORK=devnetL1
 DEVNET="$PWD/.devnet"
 
-COMPOSE="docker-compose"
 COMPOSE="podman-compose"
+COMPOSE="docker compose"
 
 # Helper method that waits for a given URL to be up. Can't use
 # cURL's built-in retry logic because connection reset errors
