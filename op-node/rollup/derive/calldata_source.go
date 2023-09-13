@@ -1,11 +1,21 @@
 package derive
 
+/*
+#cgo LDFLAGS: -L../../../lib -lnear_da_op_rpc_sys
+#include "../../../lib/libnear-da-op-rpc.h"
+#include <stdlib.h>
+#include <math.h>
+*/
+import "C"
+
 import (
 	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
+	"unsafe"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -147,15 +157,20 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 					return nil, err
 				}
 				log.Info("requesting data from near", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight)
-				blob, err := daCfg.Client.Get(context.Background(), daCfg.Namespace.Bytes(), uint64(frameRef.BlockHeight))
-				if !blob.Commitment.Equal(frameRef.TxCommitment) {
-					log.Warn("Likely blob commitments are wrong, they dont match!")
+				blob := C.get((*C.Client)(daCfg.Client), C.uint64_t(frameRef.BlockHeight))
+
+				commitment := make([]byte, 32)
+				copy(commitment, C.GoBytes(unsafe.Pointer(&blob.commitment), 32))
+
+				if !reflect.DeepEqual(commitment, frameRef.TxCommitment) {
+					log.Warn("Likely blob commitments dont match!")
 				}
 				if err != nil {
 					return nil, NewResetError(fmt.Errorf("failed to resolve frame data from near: %w", err))
 				}
+				bytes := C.GoBytes(unsafe.Pointer(blob.data), C.int(blob.len))
 
-				out = append(out, blob.Data)
+				out = append(out, bytes)
 			} else {
 				out = append(out, tx.Data())
 			}

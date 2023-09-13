@@ -17,6 +17,7 @@ yarn-error.log
 dist
 artifacts
 cache
+lib
 
 l2geth/build/bin
 packages/contracts/deployments/custom
