@@ -18,6 +18,10 @@ RUN apt-get update && apt-get install -y \
     cbindgen \
     clang
 
+COPY --from=rust /app/lib/ /app/lib/
+RUN mv /app/lib/libnear-da-op-rpc-sys.h /app/lib/libnear-da-op-rpc.h
+RUN cat /app/lib/libnear-da-op-rpc.h
+
 # build op-batcher with the shared go.mod & go.sum files
 COPY ./op-batcher /app/op-batcher
 COPY ./op-celestia /app/op-celestia
@@ -27,11 +31,6 @@ COPY ./op-service /app/op-service
 COPY ./op-signer /app/op-signer
 COPY ./go.mod /app/go.mod
 COPY ./go.sum /app/go.sum
-
-COPY --from=rust /app/lib/ /app/lib/
-RUN mv /app/lib/libnear-da-op-rpc-sys.h /app/lib/libnear-da-op-rpc.h
-RUN cat /app/lib/libnear-da-op-rpc.h
-
 COPY ./.git /app/.git
 
 WORKDIR /app/op-batcher
@@ -44,7 +43,6 @@ RUN make op-batcher VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
 RUN mv /app/op-batcher/bin/op-batcher /
 RUN mv /app/lib /libs
-
 RUN rm -rf /app
 
 FROM alpine:3.15
