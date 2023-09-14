@@ -50,6 +50,13 @@ FROM debian:bookworm-slim
 COPY --from=builder /op-node /usr/local/bin
 COPY --from=builder /libs /usr/local/lib/
 
+RUN apt-get update && apt-get install -y \
+    openssl \
+    libssl-dev \
+    protobuf-compiler
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
 RUN mkdir -p /root/.near-credentials/testnet
 RUN mkdir -p /root/.near-credentials/mainnet
 RUN mkdir -p /root/.near-credentials/localnet

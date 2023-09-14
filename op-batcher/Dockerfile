@@ -45,10 +45,17 @@ RUN mv /app/op-batcher/bin/op-batcher /
 RUN mv /app/lib /libs
 RUN rm -rf /app
 
-FROM alpine:3.15
+FROM debian:bookworm-slim
 
 COPY --from=builder /op-batcher /usr/local/bin
 COPY --from=builder /libs /usr/local/lib/
+
+RUN apt-get update && apt-get install -y \
+    openssl \
+    libssl-dev \
+    protobuf-compiler
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 RUN mkdir -p /root/.near-credentials/testnet
 RUN mkdir -p /root/.near-credentials/mainnet
