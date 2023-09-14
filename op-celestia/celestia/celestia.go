@@ -40,7 +40,7 @@ var _ Framer = &FrameRef{}
 func (f *FrameRef) MarshalBinary() ([]byte, error) {
 	ref := make([]byte, 8+len(f.TxCommitment))
 
-	binary.LittleEndian.PutUint64(ref, f.BlockHeight)
+	binary.BigEndian.PutUint64(ref, f.BlockHeight)
 	copy(ref[8:], f.TxCommitment)
 
 	return ref, nil
@@ -62,7 +62,7 @@ func (f *FrameRef) UnmarshalBinary(ref []byte) error {
 	if len(ref) <= 8 {
 		return ErrInvalidSize
 	}
-	f.BlockHeight = binary.LittleEndian.Uint64(ref[:8])
+	f.BlockHeight = binary.BigEndian.Uint64(ref[:8])
 	f.TxCommitment = ref[8:]
 	return nil
 }

@@ -2,8 +2,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-#define MAX_TGAS 300000000000000
+#include <math.h>
+#include <stdio.h>
 
 typedef struct Client Client;
 
@@ -38,6 +38,8 @@ typedef struct RustSafeArray {
   const uint8_t *data;
   size_t len;
 } RustSafeArray;
+
+char *get_error(void);
 
 const struct Client *new_client(const char *key_path,
                                 const char *contract,

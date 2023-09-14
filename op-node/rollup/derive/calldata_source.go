@@ -1,10 +1,9 @@
 package derive
 
 /*
-#cgo LDFLAGS: -L../../../lib -lnear_da_op_rpc_sys
+#cgo LDFLAGS: -L../../../lib -lnear_da_op_rpc_sys -lssl -lcrypto -lm
 #include "../../../lib/libnear-da-op-rpc.h"
 #include <stdlib.h>
-#include <math.h>
 */
 import "C"
 
@@ -156,8 +155,26 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 					log.Warn("unable to decode frame reference", "index", j, "err", err)
 					return nil, err
 				}
-				log.Info("requesting data from near", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight)
+				bytes, err := frameRef.MarshalBinary()
+				if err != nil {
+					log.Warn("unable to encode frame reference", "index", j, "err", err, "frameRef", frameRef)
+					return nil, err
+				}
+
+				log.Info("requesting data from NEAR", "frameRef", frameRef, "bytes", bytes)
 				blob := C.get((*C.Client)(daCfg.Client), C.uint64_t(frameRef.BlockHeight))
+
+				if blob == nil {
+					errData := C.get_error()
+					if errData != nil {
+						errStr := C.GoString(errData)
+						log.Error("NEAR returned no blob", "err", errStr)
+					}
+					log.Warn("no data returned from near", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight, "blob", blob)
+					continue
+				} else {
+					log.Info("got data from NEAR", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight)
+				}
 
 				commitment := make([]byte, 32)
 				copy(commitment, C.GoBytes(unsafe.Pointer(&blob.commitment), 32))
@@ -168,7 +185,7 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 				if err != nil {
 					return nil, NewResetError(fmt.Errorf("failed to resolve frame data from near: %w", err))
 				}
-				bytes := C.GoBytes(unsafe.Pointer(blob.data), C.int(blob.len))
+				bytes = C.GoBytes(unsafe.Pointer(blob.data), C.int(blob.len))
 
 				out = append(out, bytes)
 			} else {

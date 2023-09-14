@@ -53,6 +53,7 @@ COPY --from=builder /libs /usr/local/lib/
 RUN apt-get update && apt-get install -y \
     openssl \
     libssl-dev \
+    ca-certificates \
     protobuf-compiler
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH

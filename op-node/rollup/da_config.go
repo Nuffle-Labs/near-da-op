@@ -1,7 +1,7 @@
 package rollup
 
 /*
-#cgo LDFLAGS: -L../../lib -lnear_da_op_rpc_sys
+#cgo LDFLAGS: -L../../lib -lnear_da_op_rpc_sys -lssl -lcrypto -lm
 #include "../../lib/libnear-da-op-rpc.h"
 #include <stdlib.h>
 */

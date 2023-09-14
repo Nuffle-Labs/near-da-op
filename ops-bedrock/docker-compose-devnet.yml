@@ -10,10 +10,13 @@ volumes:
   op_log:
 
 services:
+  # Not needed for non-devnet deployments, but useful for testing.
   l1:
     build:
       context: .
       dockerfile: Dockerfile.l1
+    env_file:
+      - .env
     ports:
       - '8545:8545'
       - '7060:6060'
@@ -26,6 +29,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.l2
+    env_file:
+      - .env
     ports:
       - '9545:8545'
       - '8060:6060'
@@ -45,6 +50,8 @@ services:
     build:
       context: ../
       dockerfile: ./op-node/Dockerfile
+    env_file:
+      - .env
     command: >
       op-node
       --l1=ws://l1:8546
@@ -69,12 +76,10 @@ services:
       --metrics.port=7300
       --pprof.enabled
       --rpc.enable-admin
-      --da-account=datayalla.testnet
-      --da-contract=da2.datayalla.testnet
-      --da-key-path=/root/.near-credentials/testnet/datayalla.testnet.json
-      --namespace-id=000008e5f679bf7116cb
-    environment:
-      OP_NODE_AUTH_TOKEN: $CELESTIA_NODE_AUTH_TOKEN
+      --da-account=${DA_ACCOUNT}
+      --da-contract=${DA_CONTRACT}
+      --da-key-path=${DA_KEY_PATH}
+      --namespace-id=${NAMESPACE_ID}
     ports:
       - '7545:8545'
       - '9003:9003'
@@ -85,7 +90,7 @@ services:
       - '${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt'
       - '${PWD}/test-jwt-secret.txt:/config/test-jwt-secret.txt'
       - '${PWD}/../.devnet/rollup.json:/rollup.json'
-      - ~/.near-credentials/testnet/datayalla.testnet.json:/root/.near-credentials/testnet/datayalla.testnet.json
+      - ~/.near-credentials/testnet/throwawaykey.testnet.json:/root/.near-credentials/testnet/throwawaykey.testnet.json
       - op_log:/op_log
 
   op-proposer:
@@ -96,28 +101,21 @@ services:
     build:
       context: ../
       dockerfile: ./op-proposer/Dockerfile
+    env_file:
+      - .env
     ports:
       - '6062:6060'
       - '7302:7300'
     volumes:
-      - ~/.near-credentials/testnet/datayalla.testnet.json:/root/.near-credentials/testnet/datayalla.testnet.json
+      - ~/.near-credentials/testnet/throwawaykey.testnet.json:/root/.near-credentials/testnet/throwawaykey.testnet.json
     environment:
-      OP_PROPOSER_L1_ETH_RPC: http://l1:8545
-      OP_PROPOSER_ROLLUP_RPC: http://op-node:8545
       OP_PROPOSER_POLL_INTERVAL: 1s
       OP_PROPOSER_NUM_CONFIRMATIONS: 1
       OP_PROPOSER_SAFE_ABORT_NONCE_TOO_LOW_COUNT: 3
       OP_PROPOSER_RESUBMISSION_TIMEOUT: 30s
-      OP_PROPOSER_MNEMONIC: test test test test test test test test test test test junk
-      OP_PROPOSER_L2_OUTPUT_HD_PATH: "m/44'/60'/0'/0/1"
-      OP_PROPOSER_L2OO_ADDRESS: '${L2OO_ADDRESS}'
       OP_PROPOSER_PPROF_ENABLED: 'true'
       OP_PROPOSER_METRICS_ENABLED: 'true'
       OP_PROPOSER_ALLOW_NON_FINALIZED: 'false'
-      OP_PROPOSER_NAMESPACE_ID: '000008e5f679bf7116cb'
-      OP_PROPOSER_DA_ACCOUNT: datayalla.testnet
-      OP_PROPOSER_DA_CONTRACT: da2.datayalla.testnet
-      OP_PROPOSER_DA_KEY_PATH: /root/.near-credentials/testnet/datayalla.testnet.json
 
   op-batcher:
     depends_on:
@@ -130,16 +128,15 @@ services:
     build:
       context: ../
       dockerfile: ./op-batcher/Dockerfile
+    env_file:
+      - .env
     ports:
       - '6061:6060'
       - '7301:7300'
       - '6545:8545'
     volumes:
-      - ~/.near-credentials/testnet/datayalla.testnet.json:/root/.near-credentials/testnet/datayalla.testnet.json
+      - ~/.near-credentials/testnet/throwawaykey.testnet.json:/root/.near-credentials/testnet/throwawaykey.testnet.json
     environment:
-      OP_BATCHER_L1_ETH_RPC: http://l1:8545
-      OP_BATCHER_L2_ETH_RPC: http://l2:8545
-      OP_BATCHER_ROLLUP_RPC: http://op-node:8545
       OFFLINE_GAS_ESTIMATION: null
       OP_BATCHER_MAX_CHANNEL_DURATION: 1
       OP_BATCHER_MAX_L1_TX_SIZE_BYTES: 120000
@@ -151,15 +148,10 @@ services:
       OP_BATCHER_NUM_CONFIRMATIONS: 1
       OP_BATCHER_SAFE_ABORT_NONCE_TOO_LOW_COUNT: 3
       OP_BATCHER_RESUBMISSION_TIMEOUT: 30s
-      OP_BATCHER_MNEMONIC: test test test test test test test test test test test junk
       OP_BATCHER_SEQUENCER_HD_PATH: "m/44'/60'/0'/0/2"
       OP_BATCHER_PPROF_ENABLED: 'true'
       OP_BATCHER_METRICS_ENABLED: 'true'
       OP_BATCHER_RPC_ENABLE_ADMIN: 'true'
-      OP_BATCHER_NAMESPACE_ID: '000008e5f679bf7116cb'
-      OP_BATCHER_DA_ACCOUNT: datayalla.testnet
-      OP_BATCHER_DA_CONTRACT: da2.datayalla.testnet
-      OP_BATCHER_DA_KEY_PATH: /root/.near-credentials/testnet/datayalla.testnet.json
 
   stateviz:
     build:

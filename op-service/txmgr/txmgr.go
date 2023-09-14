@@ -1,7 +1,7 @@
 package txmgr
 
 /*
-#cgo LDFLAGS: -L../../lib -lnear_da_op_rpc_sys
+#cgo LDFLAGS: -L../../lib -lnear_da_op_rpc_sys -lssl -lcrypto -lm
 #include "../../lib/libnear-da-op-rpc.h"
 #include <stdlib.h>
 */
@@ -132,7 +132,16 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 
 	// TODO: reuse this
 	config.KeyPath = cfg.DaKeyPath
+	l.Info("creating NEAR client", "keyPath", cfg.DaKeyPath, "contract", cfg.DaContract, "network", "testnet", "namespace", hex.EncodeToString(nsBytes))
 	daClient := C.new_client(C.CString(cfg.DaKeyPath), C.CString(cfg.DaContract), C.CString("testnet"), (*C.uint8_t)(C.CBytes(nsBytes)))
+	if daClient == nil {
+		errData := C.get_error()
+		if errData != nil {
+			errStr := C.GoString(errData)
+			l.Error("unable to create NEAR DA client", "err", errStr)
+		}
+		return nil, errors.New("unable to create NEAR DA client")
+	}
 
 	namespace, err := share.NewBlobNamespaceV0(nsBytes)
 	if err != nil {
@@ -236,11 +245,26 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 	// TODO: test this
 	// Dip into client to submit to near
 	maybeFrameRef := C.submit_batch(m.daClient, C.CString(candidate.To.Hex()), (*C.uint8_t)(C.CBytes(candidate.TxData)), C.size_t(len(candidate.TxData)))
-	m.l.Debug("maybeFrameData", "maybeFrameData", maybeFrameRef)
+	m.l.Info("Submitting to NEAR maybeFrameData",
+		"maybeFrameData", maybeFrameRef,
+		"candidate", candidate.To.Hex(),
+		"candidatestring", candidate.To.String(),
+		"namespace", hex.EncodeToString(m.namespace.Bytes()),
+		"txData", C.CBytes(candidate.TxData),
+		"txLen", C.size_t(len(candidate.TxData)),
+	)
+	errData := C.get_error()
+	if errData != nil {
+		errStr := C.GoString(errData)
+		m.l.Error("unable to submit to NEAR", "err", errStr)
+	}
 	if maybeFrameRef.len > 1 {
 		// Set the tx data to a frame reference
-		candidate.TxData = C.GoBytes(unsafe.Pointer(maybeFrameRef.data), C.int(maybeFrameRef.len))
-		m.l.Debug("candidate.TxData after near enrichment", "candidate.TxData", candidate.TxData)
+		bytes := C.GoBytes(unsafe.Pointer(maybeFrameRef.data), C.int(maybeFrameRef.len))
+		candidate.TxData = bytes
+		m.l.Info("candidate.TxData after NEAR enrichment", "candidate.TxData", candidate.TxData)
+	} else {
+		m.l.Warn("no frame reference returned from NEAR, falling back to ethereum")
 	}
 
 	// // TODO: this is a hack to route only batcher transactions through celestia
