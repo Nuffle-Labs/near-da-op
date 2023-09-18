@@ -28,9 +28,9 @@ func bytesTo32CByteSlice(b *[]byte) [32]C.uint8_t {
 	return x
 }
 
-func NewDAConfig(account, contract, keyPath string, ns uint32) (*DAConfig, error) {
+func NewDAConfig(account, contract, key string, ns uint32) (*DAConfig, error) {
 	// TODO: reuse this
-	daClient := C.new_client(C.CString(keyPath), C.CString(contract), C.CString("testnet"), C.uint8_t(0), C.uint(ns))
+	daClient := C.new_client(C.CString(account), C.CString(key), C.CString(contract), C.CString("testnet"), C.uint8_t(0), C.uint(ns))
 	return &DAConfig{
 		Namespace: Namespace{ Version: 0, Id: ns },
 		Client:    daClient,

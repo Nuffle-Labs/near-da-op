@@ -42,7 +42,14 @@ typedef struct RustSafeArray {
 
 char *get_error(void);
 
-const struct Client *new_client(const char *key_path,
+const struct Client *new_client_file(const char *key_path,
+                                     const char *contract,
+                                     const char *network,
+                                     uint8_t namespace_version,
+                                     uint32_t namespace_);
+
+const struct Client *new_client(const char *account_id,
+                                const char *secret_key,
                                 const char *contract,
                                 const char *network,
                                 uint8_t namespace_version,

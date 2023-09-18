@@ -33,7 +33,7 @@ const (
 	ReceiptQueryIntervalFlagName      = "txmgr.receipt-query-interval"
 	DaAccountFlagName                 = "da-account"
 	DaContractFlagName                = "da-contract"
-	DaKeyPathFlagName                 = "da-key-path"
+	DaKeyFlagName                     = "da-key"
 	NamespaceIdFlagName               = "namespace-id"
 	AuthTokenFlagName                 = "auth-token"
 )
@@ -140,7 +140,7 @@ type CLIConfig struct {
 	TxNotInMempoolTimeout     time.Duration
 	DaAccount                 string
 	DaContract                string
-	DaKeyPath                 string
+	DaKey                     string
 	NamespaceId               uint32
 	AuthToken                 string
 }
@@ -191,7 +191,7 @@ func ReadCLIConfig(ctx *cli.Context) CLIConfig {
 		TxNotInMempoolTimeout:     ctx.GlobalDuration(TxNotInMempoolTimeoutFlagName),
 		DaAccount:                 ctx.GlobalString(DaAccountFlagName),
 		DaContract:                ctx.GlobalString(DaContractFlagName),
-		DaKeyPath:                 ctx.GlobalString(DaKeyPathFlagName),
+		DaKey:                     ctx.GlobalString(DaKeyFlagName),
 		NamespaceId:               uint32(ctx.GlobalUint(NamespaceIdFlagName)),
 	}
 }
@@ -283,8 +283,8 @@ type Config struct {
 
 	// Account is the account used to sign transactions.
 	DaAccount string
-	// KeyPath is the path to the key used to sign transactions.
-	DaKeyPath string
+	// Key is the key used to sign transactions.
+	DaKey string
 	// Contract is the address of the Data Availability contract.
 	DaContract string
 

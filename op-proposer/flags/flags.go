@@ -50,12 +50,6 @@ var (
 		Required: true,
 		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_CONTRACT"),
 	}
-	DaKeypathFlag = cli.StringFlag{
-		Name:     "da-key-path",
-		Usage:    "Key path for sending messages to the DA node",
-		Required: true,
-		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_KEY_PATH"),
-	}
 	// Optional flags
 	AllowNonFinalizedFlag = cli.BoolFlag{
 		Name:   "allow-non-finalized",
@@ -73,7 +67,6 @@ var requiredFlags = []cli.Flag{
 	PollIntervalFlag,
 	DaAccountFlag,
 	DaContractFlag,
-	DaKeypathFlag,
 }
 
 var optionalFlags = []cli.Flag{

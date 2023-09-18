@@ -19,7 +19,6 @@ import (
 	"sync"
 	"time"
 
-	openrpc "github.com/dndll/near-openrpc"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -120,20 +119,15 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 	if err != nil {
 		return nil, err
 	}
-	config, err := openrpc.BuildConfig("testnet")
-	if err != nil {
-		return nil, err
-	}
 
 	if cfg.NamespaceId == 0 {
 		return nil, errors.New("namespace id cannot be blank")
 	}
 
 	// TODO: reuse this
-	config.KeyPath = cfg.DaKeyPath
 	namespaceVersion := 0
-	l.Info("creating NEAR client", "keyPath", cfg.DaKeyPath, "contract", cfg.DaContract, "network", "testnet", "namespace", cfg.NamespaceId)
-	daClient := C.new_client(C.CString(cfg.DaKeyPath), C.CString(cfg.DaContract), C.CString("testnet"), C.uint8_t(namespaceVersion), C.uint(cfg.NamespaceId))
+	l.Info("creating NEAR client", "contract", cfg.DaContract, "network", "testnet", "namespace", cfg.NamespaceId)
+	daClient := C.new_client(C.CString(cfg.DaAccount), C.CString(cfg.DaKey), C.CString(cfg.DaContract), C.CString("testnet"), C.uint8_t(namespaceVersion), C.uint(cfg.NamespaceId))
 	if daClient == nil {
 		errData := C.get_error()
 		if errData != nil {

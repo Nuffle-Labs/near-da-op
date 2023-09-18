@@ -78,7 +78,7 @@ services:
       --rpc.enable-admin
       --da-account=${DA_ACCOUNT}
       --da-contract=${DA_CONTRACT}
-      --da-key-path=${DA_KEY_PATH}
+      --da-key=${DA_KEY}
       --namespace-id=${NAMESPACE_ID}
     ports:
       - '7545:8545'
@@ -90,7 +90,6 @@ services:
       - '${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt'
       - '${PWD}/test-jwt-secret.txt:/config/test-jwt-secret.txt'
       - '${PWD}/../.devnet/rollup.json:/rollup.json'
-      - ~/.near-credentials/testnet/throwawaykey.testnet.json:/root/.near-credentials/testnet/throwawaykey.testnet.json
       - op_log:/op_log
 
   op-proposer:
@@ -106,8 +105,6 @@ services:
     ports:
       - '6062:6060'
       - '7302:7300'
-    volumes:
-      - ~/.near-credentials/testnet/throwawaykey.testnet.json:/root/.near-credentials/testnet/throwawaykey.testnet.json
     environment:
       OP_PROPOSER_POLL_INTERVAL: 1s
       OP_PROPOSER_NUM_CONFIRMATIONS: 1
@@ -134,8 +131,6 @@ services:
       - '6061:6060'
       - '7301:7300'
       - '6545:8545'
-    volumes:
-      - ~/.near-credentials/testnet/throwawaykey.testnet.json:/root/.near-credentials/testnet/throwawaykey.testnet.json
     environment:
       OFFLINE_GAS_ESTIMATION: null
       OP_BATCHER_MAX_CHANNEL_DURATION: 1

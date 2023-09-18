@@ -49,9 +49,9 @@ var (
 		EnvVar: prefixEnvVar("DA_CONTRACT"),
 	}
 	DaKeypath = cli.StringFlag{
-		Name:   "da-key-path",
-		Usage:  "Key path for sending messages to the DA node",
-		EnvVar: prefixEnvVar("DA_KEY_PATH"),
+		Name:   "da-key",
+		Usage:  "Key for sending messages to the DA node",
+		EnvVar: prefixEnvVar("DA_KEY"),
 	}
 	NamespaceId = cli.StringFlag{
 		Name:   "namespace-id",
