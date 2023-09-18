@@ -5,6 +5,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#define VERSION 1
+
 typedef struct Client Client;
 
 typedef uint64_t BlockHeight;
@@ -13,14 +15,13 @@ typedef struct SubmitResult {
   BlockHeight _0;
 } SubmitResult;
 
-typedef uint8_t Namespace[32];
-
 typedef uint8_t Commitment[32];
 
 typedef uint32_t ShareVersion;
 
 typedef struct BlobSafe {
-  Namespace namespace_;
+  uint8_t namespace_version;
+  uint32_t namespace_id;
   Commitment commitment;
   ShareVersion share_version;
   const uint8_t *data;
@@ -44,7 +45,8 @@ char *get_error(void);
 const struct Client *new_client(const char *key_path,
                                 const char *contract,
                                 const char *network,
-                                const uint8_t *namespace_);
+                                uint8_t namespace_version,
+                                uint32_t namespace_);
 
 void free_client(struct Client *client);
 
@@ -56,7 +58,7 @@ void free_submit_result(struct SubmitResult *result);
 
 const struct BlobSafe *get(const struct Client *client, BlockHeight height);
 
-const struct BlobSafe *fast_get(const struct Client *client, const uint8_t *commitment, size_t len);
+const struct BlobSafe *fast_get(const struct Client *client, const uint8_t *commitment);
 
 void free_blob(struct BlobSafe *blob);
 

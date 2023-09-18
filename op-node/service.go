@@ -61,7 +61,7 @@ func NewConfig(ctx *cli.Context, log log.Logger) (*node.Config, error) {
 		ctx.GlobalString(flags.DaAccount.Name),
 		ctx.GlobalString(flags.DaContract.Name),
 		ctx.GlobalString(flags.DaKeypath.Name),
-		ctx.GlobalString(flags.NamespaceId.Name),
+		(uint32)(ctx.GlobalUint(flags.NamespaceId.Name)),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load da config: %w", err)

@@ -9,7 +9,6 @@ import "C"
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -21,8 +20,6 @@ import (
 	"time"
 
 	openrpc "github.com/dndll/near-openrpc"
-	openrpcns "github.com/dndll/near-openrpc/types/namespace"
-	"github.com/dndll/near-openrpc/types/share"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -89,6 +86,12 @@ type ETHBackend interface {
 	EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64, error)
 }
 
+/* TODO: reuse this */
+type Namespace struct {
+	Version uint8
+	Id      uint32
+}
+
 // SimpleTxManager is a implementation of TxManager that performs linear fee
 // bumping of a tx until it confirms.
 type SimpleTxManager struct {
@@ -97,7 +100,7 @@ type SimpleTxManager struct {
 	chainID *big.Int
 
 	daClient  *C.Client
-	namespace openrpcns.Namespace
+	namespace Namespace
 
 	backend ETHBackend
 	l       log.Logger
@@ -122,18 +125,15 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 		return nil, err
 	}
 
-	if cfg.NamespaceId == "" {
+	if cfg.NamespaceId == 0 {
 		return nil, errors.New("namespace id cannot be blank")
-	}
-	nsBytes, err := hex.DecodeString(cfg.NamespaceId)
-	if err != nil {
-		return nil, err
 	}
 
 	// TODO: reuse this
 	config.KeyPath = cfg.DaKeyPath
-	l.Info("creating NEAR client", "keyPath", cfg.DaKeyPath, "contract", cfg.DaContract, "network", "testnet", "namespace", hex.EncodeToString(nsBytes))
-	daClient := C.new_client(C.CString(cfg.DaKeyPath), C.CString(cfg.DaContract), C.CString("testnet"), (*C.uint8_t)(C.CBytes(nsBytes)))
+	namespaceVersion := 0
+	l.Info("creating NEAR client", "keyPath", cfg.DaKeyPath, "contract", cfg.DaContract, "network", "testnet", "namespace", cfg.NamespaceId)
+	daClient := C.new_client(C.CString(cfg.DaKeyPath), C.CString(cfg.DaContract), C.CString("testnet"), C.uint8_t(namespaceVersion), C.uint(cfg.NamespaceId))
 	if daClient == nil {
 		errData := C.get_error()
 		if errData != nil {
@@ -142,18 +142,12 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 		}
 		return nil, errors.New("unable to create NEAR DA client")
 	}
-
-	namespace, err := share.NewBlobNamespaceV0(nsBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	return &SimpleTxManager{
 		chainID:   conf.ChainID,
 		name:      name,
 		cfg:       conf,
 		daClient:  daClient,
-		namespace: namespace.ToAppNamespace(),
+		namespace: Namespace{Version: uint8(namespaceVersion), Id: cfg.NamespaceId},
 		backend:   conf.Backend,
 		l:         l.New("service", name),
 		metr:      m,
@@ -249,7 +243,7 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 		"maybeFrameData", maybeFrameRef,
 		"candidate", candidate.To.Hex(),
 		"candidatestring", candidate.To.String(),
-		"namespace", hex.EncodeToString(m.namespace.Bytes()),
+		"namespace", m.namespace,
 		"txData", C.CBytes(candidate.TxData),
 		"txLen", C.size_t(len(candidate.TxData)),
 	)

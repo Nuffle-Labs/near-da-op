@@ -9,7 +9,6 @@ import "C"
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -129,6 +128,13 @@ func (ds *DataSource) Next(ctx context.Context) (eth.Data, error) {
 	}
 }
 
+// TODO: test me
+func bytesTo32CByteSlice(b *[]byte) [32]C.uint8_t {
+	var x [32]C.uint8_t
+	copy(x[:], (*[32]C.uint8_t)(unsafe.Pointer(&b))[:])
+	return x
+}
+
 // DataFromEVMTransactions filters all of the transactions and returns the calldata from transactions
 // that are sent to the batch inbox address from the batch sender address.
 // This will return an empty array if no valid transactions are found.
@@ -162,6 +168,7 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 				}
 
 				log.Info("requesting data from NEAR", "frameRef", frameRef, "bytes", bytes)
+
 				blob := C.get((*C.Client)(daCfg.Client), C.uint64_t(frameRef.BlockHeight))
 
 				if blob == nil {
@@ -170,10 +177,10 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 						errStr := C.GoString(errData)
 						log.Error("NEAR returned no blob", "err", errStr)
 					}
-					log.Warn("no data returned from near", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight, "blob", blob)
+					log.Warn("no data returned from near", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight, "blob", blob)
 					continue
 				} else {
-					log.Info("got data from NEAR", "namespace", hex.EncodeToString(daCfg.Namespace.Bytes()), "height", frameRef.BlockHeight)
+					log.Info("got data from NEAR", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight)
 				}
 
 				commitment := make([]byte, 32)

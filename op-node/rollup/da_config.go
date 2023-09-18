@@ -8,15 +8,16 @@ package rollup
 import "C"
 
 import (
-	"encoding/hex"
 	"unsafe"
-
-	openrpcns "github.com/dndll/near-openrpc/types/namespace"
-	"github.com/dndll/near-openrpc/types/share"
 )
 
+type Namespace struct {
+	Version uint8
+	Id      uint32
+}
+
 type DAConfig struct {
-	Namespace openrpcns.Namespace
+	Namespace Namespace
 	Client    *C.Client
 }
 
@@ -27,27 +28,11 @@ func bytesTo32CByteSlice(b *[]byte) [32]C.uint8_t {
 	return x
 }
 
-func NewDAConfig(account, contract, keyPath, ns string) (*DAConfig, error) {
-	nsBytes, err := hex.DecodeString(ns)
-	if err != nil {
-		return &DAConfig{}, err
-	}
-
-	namespace, err := share.NewBlobNamespaceV0(nsBytes)
-	if err != nil {
-		return nil, err
-	}
-
+func NewDAConfig(account, contract, keyPath string, ns uint32) (*DAConfig, error) {
 	// TODO: reuse this
-	// TODO: convert these
-	daClient := C.new_client(C.CString(keyPath), C.CString(contract), C.CString("testnet"), (*C.uint8_t)(C.CBytes(nsBytes)))
-
-	if err != nil {
-		return &DAConfig{}, err
-	}
-
+	daClient := C.new_client(C.CString(keyPath), C.CString(contract), C.CString("testnet"), C.uint8_t(0), C.uint(ns))
 	return &DAConfig{
-		Namespace: namespace.ToAppNamespace(),
+		Namespace: Namespace{ Version: 0, Id: ns },
 		Client:    daClient,
 	}, nil
 }

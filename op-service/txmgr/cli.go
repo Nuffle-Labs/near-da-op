@@ -114,10 +114,10 @@ func CLIFlags(envPrefix string) []cli.Flag {
 			Value:  12 * time.Second,
 			EnvVar: opservice.PrefixEnvVar(envPrefix, "TXMGR_RECEIPT_QUERY_INTERVAL"),
 		},
-		cli.StringFlag{
+		cli.UintFlag{
 			Name:   NamespaceIdFlagName,
 			Usage:  "Namespace ID of the DA layer",
-			Value:  "000008e5f679bf7116cb",
+			Value:  55,
 			EnvVar: opservice.PrefixEnvVar(envPrefix, "NAMESPACE_ID"),
 		},
 	}, client.CLIFlags(envPrefix)...)
@@ -141,7 +141,7 @@ type CLIConfig struct {
 	DaAccount                 string
 	DaContract                string
 	DaKeyPath                 string
-	NamespaceId               string
+	NamespaceId               uint32
 	AuthToken                 string
 }
 
@@ -192,7 +192,7 @@ func ReadCLIConfig(ctx *cli.Context) CLIConfig {
 		DaAccount:                 ctx.GlobalString(DaAccountFlagName),
 		DaContract:                ctx.GlobalString(DaContractFlagName),
 		DaKeyPath:                 ctx.GlobalString(DaKeyPathFlagName),
-		NamespaceId:               ctx.GlobalString(NamespaceIdFlagName),
+		NamespaceId:               uint32(ctx.GlobalUint(NamespaceIdFlagName)),
 	}
 }
 
