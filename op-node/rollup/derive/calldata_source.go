@@ -169,15 +169,19 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 
 				log.Info("requesting data from NEAR", "frameRef", frameRef, "bytes", bytes)
 
-				blob := C.get((*C.Client)(daCfg.Client), C.uint64_t(frameRef.BlockHeight))
+				blockHeight := C.uint64_t(frameRef.BlockHeight)
+				defer C.free(unsafe.Pointer(&blockHeight))
+
+				blob := C.get((*C.Client)(daCfg.Client), blockHeight)
 
 				if blob == nil {
 					errData := C.get_error()
+					defer C.free(unsafe.Pointer(errData))
 					if errData != nil {
 						errStr := C.GoString(errData)
 						log.Error("NEAR returned no blob", "err", errStr)
 					}
-					log.Warn("no data returned from near", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight, "blob", blob)
+					log.Warn("no data returned from near", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight)
 					continue
 				} else {
 					log.Info("got data from NEAR", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight)
@@ -188,9 +192,8 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 
 				if !reflect.DeepEqual(commitment, frameRef.TxCommitment) {
 					log.Warn("Likely blob commitments dont match!")
-				}
-				if err != nil {
-					return nil, NewResetError(fmt.Errorf("failed to resolve frame data from near: %w", err))
+				} else {
+					log.Debug("Blob commitments match!")
 				}
 				bytes = C.GoBytes(unsafe.Pointer(blob.data), C.int(blob.len))
 

@@ -124,12 +124,32 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 		return nil, errors.New("namespace id cannot be blank")
 	}
 
-	// TODO: reuse this
-	namespaceVersion := 0
 	l.Info("creating NEAR client", "contract", cfg.DaContract, "network", "testnet", "namespace", cfg.NamespaceId)
-	daClient := C.new_client(C.CString(cfg.DaAccount), C.CString(cfg.DaKey), C.CString(cfg.DaContract), C.CString("testnet"), C.uint8_t(namespaceVersion), C.uint(cfg.NamespaceId))
+
+	account := C.CString(cfg.DaAccount)
+	defer C.free(unsafe.Pointer(account))
+
+	key := C.CString(cfg.DaKey)
+	defer C.free(unsafe.Pointer(key))
+
+	contract := C.CString(cfg.DaContract)
+	defer C.free(unsafe.Pointer(contract))
+
+	network := C.CString("testnet")
+	defer C.free(unsafe.Pointer(network))
+
+	namespaceId := C.uint(cfg.NamespaceId)
+	defer C.free(unsafe.Pointer(&namespaceId))
+
+	namespaceVersion := C.uint8_t(0)
+	defer C.free(unsafe.Pointer(&namespaceVersion))
+
+
+	daClient := C.new_client(account, key, contract, network, namespaceVersion, namespaceId)
 	if daClient == nil {
 		errData := C.get_error()
+		defer C.free(unsafe.Pointer(errData))
+
 		if errData != nil {
 			errStr := C.GoString(errData)
 			l.Error("unable to create NEAR DA client", "err", errStr)

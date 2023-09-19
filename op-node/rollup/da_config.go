@@ -8,6 +8,8 @@ package rollup
 import "C"
 
 import (
+	"errors"
+	"fmt"
 	"unsafe"
 )
 
@@ -21,18 +23,39 @@ type DAConfig struct {
 	Client    *C.Client
 }
 
-// TODO: test me
-func bytesTo32CByteSlice(b *[]byte) [32]C.uint8_t {
-	var x [32]C.uint8_t
-	copy(x[:], (*[32]C.uint8_t)(unsafe.Pointer(&b))[:])
-	return x
-}
+func NewDAConfig(accountN, contractN, keyN string, ns uint32) (*DAConfig, error) {
+	account := C.CString(accountN)
+	defer C.free(unsafe.Pointer(account))
 
-func NewDAConfig(account, contract, key string, ns uint32) (*DAConfig, error) {
-	// TODO: reuse this
-	daClient := C.new_client(C.CString(account), C.CString(key), C.CString(contract), C.CString("testnet"), C.uint8_t(0), C.uint(ns))
+	key := C.CString(keyN)
+	defer C.free(unsafe.Pointer(key))
+
+	contract := C.CString(contractN)
+	defer C.free(unsafe.Pointer(contract))
+
+	network := C.CString("testnet")
+	defer C.free(unsafe.Pointer(network))
+
+	namespaceId := C.uint(ns)
+	defer C.free(unsafe.Pointer(&namespaceId))
+
+	namespaceVersion := C.uint8_t(0)
+	defer C.free(unsafe.Pointer(&namespaceVersion))
+
+	daClient := C.new_client(account, key, contract, network, namespaceVersion, namespaceId)
+	if daClient == nil {
+		errData := C.get_error()
+		defer C.free(unsafe.Pointer(errData))
+
+		if errData != nil {
+			errStr := C.GoString(errData)
+			return nil, fmt.Errorf("unable to create NEAR DA client %s", errStr)
+		}
+		return nil, errors.New("unable to create NEAR DA client")
+	}
+
 	return &DAConfig{
-		Namespace: Namespace{ Version: 0, Id: ns },
+		Namespace: Namespace{Version: 0, Id: ns},
 		Client:    daClient,
 	}, nil
 }
