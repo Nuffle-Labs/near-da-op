@@ -138,12 +138,9 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 	network := C.CString("testnet")
 	defer C.free(unsafe.Pointer(network))
 
+	// Numbers don't need to be dellocated
 	namespaceId := C.uint(cfg.NamespaceId)
-	defer C.free(unsafe.Pointer(&namespaceId))
-
 	namespaceVersion := C.uint8_t(0)
-	defer C.free(unsafe.Pointer(&namespaceVersion))
-
 
 	daClient := C.new_client(account, key, contract, network, namespaceVersion, namespaceId)
 	if daClient == nil {
@@ -252,7 +249,13 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 	}
 	// TODO: test this
 	// Dip into client to submit to near
-	maybeFrameRef := C.submit_batch(m.daClient, C.CString(candidate.To.Hex()), (*C.uint8_t)(C.CBytes(candidate.TxData)), C.size_t(len(candidate.TxData)))
+	candidateHex := C.CString(candidate.To.Hex())
+	defer C.free(unsafe.Pointer(candidateHex))
+
+	txBytes := C.CBytes(candidate.TxData)
+	defer C.free(unsafe.Pointer(txBytes))
+
+	maybeFrameRef := C.submit_batch(m.daClient, candidateHex, (*C.uint8_t)(txBytes), C.size_t(len(candidate.TxData)))
 	m.l.Info("Submitting to NEAR maybeFrameData",
 		"maybeFrameData", maybeFrameRef,
 		"candidate", candidate.To.Hex(),

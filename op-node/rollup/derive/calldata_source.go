@@ -169,10 +169,11 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 
 				log.Info("requesting data from NEAR", "frameRef", frameRef, "bytes", bytes)
 
-				blockHeight := C.uint64_t(frameRef.BlockHeight)
-				defer C.free(unsafe.Pointer(&blockHeight))
+				txId := C.CBytes(frameRef.TxId)
+				defer C.free(unsafe.Pointer(txId))
 
-				blob := C.get((*C.Client)(daCfg.Client), blockHeight)
+				blob := C.get((*C.Client)(daCfg.Client), (*C.uint8_t)(txId))
+				defer C.free(unsafe.Pointer(blob))
 
 				if blob == nil {
 					errData := C.get_error()
@@ -181,10 +182,10 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 						errStr := C.GoString(errData)
 						log.Error("NEAR returned no blob", "err", errStr)
 					}
-					log.Warn("no data returned from near", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight)
+					log.Warn("no data returned from near", "namespace", daCfg.Namespace, "height", frameRef.TxId)
 					continue
 				} else {
-					log.Info("got data from NEAR", "namespace", daCfg.Namespace, "height", frameRef.BlockHeight)
+					log.Info("got data from NEAR", "namespace", daCfg.Namespace, "height", frameRef.TxId)
 				}
 
 				commitment := make([]byte, 32)

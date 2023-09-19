@@ -9,12 +9,6 @@
 
 typedef struct Client Client;
 
-typedef uint64_t BlockHeight;
-
-typedef struct SubmitResult {
-  BlockHeight _0;
-} SubmitResult;
-
 typedef uint8_t Commitment[32];
 
 typedef uint32_t ShareVersion;
@@ -27,13 +21,6 @@ typedef struct BlobSafe {
   const uint8_t *data;
   size_t len;
 } BlobSafe;
-
-typedef struct GetAllResult {
-  const struct BlobSafe *blobs;
-  size_t blob_len;
-  const BlockHeight *heights;
-  size_t heights_len;
-} GetAllResult;
 
 typedef struct RustSafeArray {
   const uint8_t *data;
@@ -57,19 +44,11 @@ const struct Client *new_client(const char *account_id,
 
 void free_client(struct Client *client);
 
-const struct SubmitResult *submit(const struct Client *client,
-                                  const struct BlobSafe *blobs,
-                                  size_t len);
+char *submit(const struct Client *client, const struct BlobSafe *blobs, size_t len);
 
-void free_submit_result(struct SubmitResult *result);
-
-const struct BlobSafe *get(const struct Client *client, BlockHeight height);
-
-const struct BlobSafe *fast_get(const struct Client *client, const uint8_t *commitment);
+const struct BlobSafe *get(const struct Client *client, const uint8_t *transaction_id);
 
 void free_blob(struct BlobSafe *blob);
-
-const struct GetAllResult *get_all(const struct Client *client);
 
 struct RustSafeArray submit_batch(const struct Client *client,
                                   const char *candidate_hex,

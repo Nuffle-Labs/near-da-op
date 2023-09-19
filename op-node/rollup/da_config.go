@@ -36,11 +36,9 @@ func NewDAConfig(accountN, contractN, keyN string, ns uint32) (*DAConfig, error)
 	network := C.CString("testnet")
 	defer C.free(unsafe.Pointer(network))
 
+	// Numbers don't need to be dellocated
 	namespaceId := C.uint(ns)
-	defer C.free(unsafe.Pointer(&namespaceId))
-
 	namespaceVersion := C.uint8_t(0)
-	defer C.free(unsafe.Pointer(&namespaceVersion))
 
 	daClient := C.new_client(account, key, contract, network, namespaceVersion, namespaceId)
 	if daClient == nil {
