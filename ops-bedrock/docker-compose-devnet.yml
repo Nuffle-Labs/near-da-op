@@ -7,7 +7,9 @@ version: '3.4'
 volumes:
   l1_data:
   l2_data:
+  l2_data2:
   op_log:
+  op_log2:
   near_lc:
 
 services:
@@ -81,6 +83,7 @@ services:
       --da-contract=${DA_CONTRACT}
       --da-key=${DA_KEY}
       --namespace-id=${NAMESPACE_ID}
+      #--p2p.static=/dns/op-node2/tcp/9003/udp/9003
     ports:
       - '7545:8545'
       - '9003:9003'
@@ -92,6 +95,72 @@ services:
       - '${PWD}/test-jwt-secret.txt:/config/test-jwt-secret.txt'
       - '${PWD}/../.devnet/rollup.json:/rollup.json'
       - op_log:/op_log
+
+
+  l22:
+    build:
+      context: .
+      dockerfile: Dockerfile.l2
+    env_file:
+      - .env
+    ports:
+      - '9546:8545'
+      - '8061:6060'
+    volumes:
+      - 'l2_data2:/db'
+      - '${PWD}/../.devnet/genesis-l2.json:/genesis.json'
+      - '${PWD}/test-jwt-secret2.txt:/config/test-jwt-secret.txt'
+    entrypoint: # pass the L2 specific flags by overriding the entry-point and adding extra arguments
+      - '/bin/sh'
+      - '/entrypoint.sh'
+      - '--authrpc.jwtsecret=/config/test-jwt-secret.txt'
+
+  op-node2:
+    depends_on:
+      - l1
+      - l22
+    build:
+      context: ../
+      dockerfile: ./op-node/Dockerfile
+    env_file:
+      - .env
+    command: >
+      op-node
+      --l1=ws://l1:8546
+      --l2=http://l22:8551
+      --l2.jwt-secret=/config/test-jwt-secret.txt
+      --verifier.l1-confs=0
+      --p2p.sequencer.key=8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba
+      --rollup.config=/rollup.json
+      --rpc.addr=0.0.0.0
+      --rpc.port=8545
+      --p2p.listen.ip=0.0.0.0
+      --p2p.listen.tcp=9003
+      --p2p.listen.udp=9003
+      --p2p.scoring.peers=light
+      --p2p.ban.peers=true
+      --snapshotlog.file=/op_log/snapshot.log
+      --p2p.priv.path=/config/p2p-node-key.txt
+      --metrics.enabled
+      --metrics.addr=0.0.0.0
+      --metrics.port=7300
+      --pprof.enabled
+      --rpc.enable-admin
+      --da-account=${DA_ACCOUNT}
+      --da-contract=${DA_CONTRACT}
+      --da-key=${DA_KEY}
+      --namespace-id=${NAMESPACE_ID}
+    ports:
+      - '7546:8545'
+      - '9005:9003'
+      - '7303:7300'
+      - '6063:6060'
+    volumes:
+      - '${PWD}/p2p-sequencer-key.txt:/config/p2p-sequencer-key.txt'
+      - '${PWD}/p2p-node-key.txt:/config/p2p-node-key.txt'
+      - '${PWD}/test-jwt-secret2.txt:/config/test-jwt-secret.txt'
+      - '${PWD}/../.devnet/rollup.json:/rollup.json'
+      - op_log2:/op_log
 
   op-proposer:
     depends_on:

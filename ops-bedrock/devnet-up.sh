@@ -91,7 +91,7 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up L2..."
-  $COMPOSE -f docker-compose-devnet.yml up -d l2
+  $COMPOSE -f docker-compose-devnet.yml up -d l2 l22
   wait_up $L2_URL
 )
 
@@ -99,7 +99,7 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up devnet..."
-  $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher stateviz light-client
+  $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher stateviz light-client op-node2
 )
 
 echo "Devnet ready."
