@@ -99,7 +99,7 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up devnet..."
-  $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher stateviz
+  $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher stateviz light-client
 )
 
 echo "Devnet ready."
