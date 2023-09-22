@@ -18,20 +18,26 @@ RUN apt-get update && apt-get install -y \
     cbindgen \
     clang
 
-COPY --from=rust /app/lib/ /app/lib/
-RUN mv /app/lib/libnear-da-op-rpc-sys.h /app/lib/libnear-da-op-rpc.h
-RUN cat /app/lib/libnear-da-op-rpc.h
-
 # build op-batcher with the shared go.mod & go.sum files
-COPY ./op-batcher /app/op-batcher
-COPY ./op-celestia /app/op-celestia
-COPY ./op-bindings /app/op-bindings
-COPY ./op-node /app/op-node
-COPY ./op-service /app/op-service
-COPY ./op-signer /app/op-signer
-COPY ./go.mod /app/go.mod
-COPY ./go.sum /app/go.sum
-COPY ./.git /app/.git
+COPY ./optimism/op-batcher /app/op-batcher
+COPY ./optimism/op-celestia /app/op-celestia
+COPY ./optimism/op-bindings /app/op-bindings
+COPY ./optimism/op-node /app/op-node
+COPY ./optimism/op-service /app/op-service
+COPY ./optimism/op-signer /app/op-signer
+COPY ./optimism/go.mod /app/go.mod
+COPY ./optimism/go.sum /app/go.sum
+COPY ./optimism/.git /app/.git
+
+# Copy da rpc
+COPY ./optimism/go.work /app/go.work
+COPY ./da-rpc /da-rpc
+RUN mkdir -p /da-rpc/lib
+
+COPY --from=rust /app/lib/libnear-da-op-rpc-sys.h /da-rpc/lib/
+COPY --from=rust /app/lib/libnear_da_op_rpc_sys.so /da-rpc/lib/
+RUN cat /da-rpc/lib/libnear-da-op-rpc-sys.h
+RUN ls /da-rpc/lib -l
 
 WORKDIR /app/op-batcher
 
@@ -42,13 +48,11 @@ ARG TARGETOS TARGETARCH
 RUN make op-batcher VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
 RUN mv /app/op-batcher/bin/op-batcher /
-RUN mv /app/lib /libs
-RUN rm -rf /app
 
 FROM debian:bookworm-slim
 
 COPY --from=builder /op-batcher /usr/local/bin
-COPY --from=builder /libs /usr/local/lib/
+COPY --from=builder /da-rpc/lib /usr/local/lib/
 
 RUN apt-get update && apt-get install -y \
     openssl \
@@ -57,9 +61,5 @@ RUN apt-get update && apt-get install -y \
     protobuf-compiler
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-
-RUN mkdir -p /root/.near-credentials/testnet
-RUN mkdir -p /root/.near-credentials/mainnet
-RUN mkdir -p /root/.near-credentials/localnet
 
 ENTRYPOINT ["op-batcher"]

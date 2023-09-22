@@ -23,6 +23,8 @@ import (
 	p2pcli "github.com/ethereum-optimism/optimism/op-node/p2p/cli"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
+
+	near "github.com/near/rollup-data-availability/near-da-rpc"
 )
 
 // NewConfig creates a Config from the provided flags or environment variables.
@@ -57,7 +59,7 @@ func NewConfig(ctx *cli.Context, log log.Logger) (*node.Config, error) {
 
 	l2SyncEndpoint := NewL2SyncEndpointConfig(ctx)
 
-	daCfg, err := rollup.NewDAConfig(
+	daCfg, err := near.NewConfig(
 		ctx.GlobalString(flags.DaAccount.Name),
 		ctx.GlobalString(flags.DaContract.Name),
 		ctx.GlobalString(flags.DaKeypath.Name),

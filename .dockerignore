@@ -18,5 +18,3 @@ l2geth/cmd/clef
 go/gas-oracle/gas-oracle
 go/batch-submitter/batch-submitter
 
-
-lib

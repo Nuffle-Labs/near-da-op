@@ -9,6 +9,8 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+
+	near "github.com/near/rollup-data-availability/near-da-rpc"
 )
 
 type Metrics interface {
@@ -75,7 +77,7 @@ type DerivationPipeline struct {
 }
 
 // NewDerivationPipeline creates a derivation pipeline, which should be reset before use.
-func NewDerivationPipeline(log log.Logger, cfg *rollup.Config, daCfg *rollup.DAConfig, l1Fetcher L1Fetcher, engine Engine, metrics Metrics) *DerivationPipeline {
+func NewDerivationPipeline(log log.Logger, cfg *rollup.Config, daCfg *near.Config, l1Fetcher L1Fetcher, engine Engine, metrics Metrics) *DerivationPipeline {
 
 	// Pull stages
 	l1Traversal := NewL1Traversal(log, cfg, l1Fetcher)

@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 
 	"github.com/ethereum-optimism/optimism/op-node/eth"
+	near "github.com/near/rollup-data-availability/near-da-rpc"
 )
 
 var (
@@ -48,6 +49,8 @@ type Genesis struct {
 	// unlike later L2 blocks.
 	SystemConfig eth.SystemConfig `json:"system_config"`
 }
+
+type DAConfig = near.Config
 
 type Config struct {
 	// Genesis anchor point of the rollup

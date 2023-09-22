@@ -1,18 +1,10 @@
 package txmgr
 
-/*
-#cgo LDFLAGS: -L../../lib -lnear_da_op_rpc_sys -lssl -lcrypto -lm
-#include "../../lib/libnear-da-op-rpc.h"
-#include <stdlib.h>
-*/
-import "C"
-
 import (
 	"context"
 	"errors"
 	"fmt"
 	"sync/atomic"
-	"unsafe"
 
 	"math/big"
 	"strings"
@@ -27,6 +19,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 
 	"github.com/ethereum-optimism/optimism/op-service/txmgr/metrics"
+
+	near "github.com/near/rollup-data-availability/near-da-rpc"
 )
 
 // Geth defaults the priceBump to 10
@@ -98,7 +92,7 @@ type SimpleTxManager struct {
 	name    string
 	chainID *big.Int
 
-	daClient  *C.Client
+	daClient  *near.Config
 	namespace Namespace
 
 	backend ETHBackend
@@ -124,40 +118,17 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 		return nil, errors.New("namespace id cannot be blank")
 	}
 
-	l.Info("creating NEAR client", "contract", cfg.DaContract, "network", "testnet", "namespace", cfg.NamespaceId)
-
-	account := C.CString(cfg.DaAccount)
-	defer C.free(unsafe.Pointer(account))
-
-	key := C.CString(cfg.DaKey)
-	defer C.free(unsafe.Pointer(key))
-
-	contract := C.CString(cfg.DaContract)
-	defer C.free(unsafe.Pointer(contract))
-
-	network := C.CString("testnet")
-	defer C.free(unsafe.Pointer(network))
-
-	// Numbers don't need to be dellocated
-	namespaceId := C.uint(cfg.NamespaceId)
-	namespaceVersion := C.uint8_t(0)
-
-	daClient := C.new_client(account, key, contract, network, namespaceVersion, namespaceId)
-	if daClient == nil {
-		errData := C.get_error()
-		defer C.free(unsafe.Pointer(errData))
-
-		if errData != nil {
-			errStr := C.GoString(errData)
-			l.Error("unable to create NEAR DA client", "err", errStr)
-		}
-		return nil, errors.New("unable to create NEAR DA client")
+	daConfig, err := near.NewConfig(cfg.DaContract, cfg.DaContract, cfg.DaKey, cfg.NamespaceId)
+	if err != nil {
+		return nil, err
 	}
+	namespaceVersion := 0
+
 	return &SimpleTxManager{
 		chainID:   conf.ChainID,
 		name:      name,
 		cfg:       conf,
-		daClient:  daClient,
+		daClient:  daConfig,
 		namespace: Namespace{Version: uint8(namespaceVersion), Id: cfg.NamespaceId},
 		backend:   conf.Backend,
 		l:         l.New("service", name),
@@ -230,13 +201,6 @@ func (m *SimpleTxManager) resetChannel() chan struct{} {
 	return m.resetC
 }
 
-// TODO: test me
-func bytesTo32CByteSlice(b *[]byte) [32]C.uint8_t {
-	var x [32]C.uint8_t
-	copy(x[:], (*[32]C.uint8_t)(unsafe.Pointer(&b))[:])
-	return x
-}
-
 // send performs the actual transaction creation and sending.
 func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*types.Receipt, error) {
 	m.wg.Add(1)
@@ -247,101 +211,14 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 		ctx, cancel = context.WithTimeout(ctx, m.cfg.TxSendTimeout)
 		defer cancel()
 	}
-	// TODO: test this
-	// Dip into client to submit to near
-	candidateHex := C.CString(candidate.To.Hex())
-	defer C.free(unsafe.Pointer(candidateHex))
 
-	txBytes := C.CBytes(candidate.TxData)
-	defer C.free(unsafe.Pointer(txBytes))
-
-	maybeFrameRef := C.submit_batch(m.daClient, candidateHex, (*C.uint8_t)(txBytes), C.size_t(len(candidate.TxData)))
-	m.l.Info("Submitting to NEAR maybeFrameData",
-		"maybeFrameData", maybeFrameRef,
-		"candidate", candidate.To.Hex(),
-		"candidatestring", candidate.To.String(),
-		"namespace", m.namespace,
-		"txData", C.CBytes(candidate.TxData),
-		"txLen", C.size_t(len(candidate.TxData)),
-	)
-	errData := C.get_error()
-	if errData != nil {
-		errStr := C.GoString(errData)
-		m.l.Error("unable to submit to NEAR", "err", errStr)
-	}
-	if maybeFrameRef.len > 1 {
-		// Set the tx data to a frame reference
-		bytes := C.GoBytes(unsafe.Pointer(maybeFrameRef.data), C.int(maybeFrameRef.len))
-		candidate.TxData = bytes
-		m.l.Info("candidate.TxData after NEAR enrichment", "candidate.TxData", candidate.TxData)
+	maybeFrameRef, err := m.daClient.Submit(candidate.To.Hex(), candidate.TxData)
+	if err != nil {
+		m.l.Error("unable to publish blob to near", "err", err)
+		return nil, err
 	} else {
-		m.l.Warn("no frame reference returned from NEAR, falling back to ethereum")
+		candidate.TxData = maybeFrameRef
 	}
-
-	// // TODO: this is a hack to route only batcher transactions through celestia
-	// // SimpleTxManager is used by both batcher and proposer but since proposer
-	// // writes to a smart contract, we overwrite _only_ batcher candidate as the
-	// // frame pointer to celestia, while retaining the proposer pathway that
-	// // writes the state commitment data to ethereum.
-	// if candidate.To.Hex() == "0xfF00000000000000000000000000000000000000" {
-	// 	dataBlob, err := blob.NewBlobV0(m.namespace.Bytes(), candidate.TxData)
-	// 	if err != nil {
-	// 		m.l.Warn("unable to create blob", "err", err)
-	// 		return nil, err
-	// 	}
-	// 	com, err := blob.CreateCommitment(dataBlob)
-	// 	dataBlob.Commitment = com
-	// 	if err != nil {
-	// 		m.l.Warn("unable to create blob commitment", "err", err)
-	// 		return nil, err
-	// 	}
-	// 	// err = m.daClient.Header.SyncWait(ctx)
-	// 	// if err != nil {
-	// 	// 	m.l.Warn("unable to wait for header sync", "err", err)
-	// 	// 	return nil, err
-	// 	// }
-
-	// 	// res2, err := m.daClient.Submit(ctx, []*blob.Blob{dataBlob})
-
-	// 	// TODO: convert these
-	// 	//var xnamespace *uint8
-
-	// 	blobLen := 1
-	// 	blobs := make([]C.BlobSafe, blobLen)
-
-	// 	var blobSafe C.BlobSafe
-
-	// 	blobSafe.namespace_ = C.Namespace(bytesTo32CByteSlice(&dataBlob.Namespace))
-	// 	blobSafe.commitment = C.Commitment(bytesTo32CByteSlice(&dataBlob.Commitment))
-	// 	blobSafe.share_version = C.ShareVersion(dataBlob.ShareVersion)
-	// 	blobSafe.data = (*C.uint8_t)(C.CBytes(dataBlob.Data))
-	// 	blobSafe.len = C.size_t(len(dataBlob.Data))
-
-	// 	blobs[0] = blobSafe
-
-	// 	res := C.submit(m.daClient, (*C.BlobSafe)(unsafe.Pointer(&blobs)), 1)
-	// 	blockHeight := res._0
-	// 	if err != nil {
-	// 		m.l.Error("unable to publish blob to near", "err", err)
-	// 		return nil, err
-	// 	}
-
-	// 	if blockHeight == 0 {
-	// 		m.l.Warn("unexpected response from near got", "res.Height", blockHeight)
-	// 		return nil, errors.New("unexpected response code")
-	// 	}
-
-	// 	frameRef := celestia.FrameRef{
-	// 		BlockHeight:  (uint64)(blockHeight),
-	// 		TxCommitment: com,
-	// 	}
-	// 	frameRefData, err := frameRef.MarshalBinary()
-	// 	if err != nil {
-	// 		m.l.Warn("unable to marshal frame reference", "err", err)
-	// 		return nil, err
-	// 	}
-	// 	candidate.TxData = frameRefData
-	// }
 
 	tx, err := m.craftTx(ctx, candidate)
 	if err != nil {

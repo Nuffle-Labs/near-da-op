@@ -24,19 +24,23 @@ submodules:
 	fi
 .PHONY: submodules
 
+private-module:
+	# Set the GOPRIVATE env var to allow private modules to be fetched
+	go env -w GOPRIVATE="github.com/near/rollup-data-availability"
+
 op-bindings:
 	make -C ./op-bindings
 .PHONY: op-bindings
 
-op-node:
+op-node: private-module
 	make -C ./op-node op-node
 .PHONY: op-node
 
-op-batcher:
+op-batcher: private-module
 	make -C ./op-batcher op-batcher
 .PHONY: op-batcher
 
-op-proposer:
+op-proposer: private-module
 	make -C ./op-proposer op-proposer
 .PHONY: op-proposer
 
