@@ -1,19 +1,47 @@
-FROM --platform=$BUILDPLATFORM golang:1.19.0-alpine3.15 as builder
+FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/op-rpc:0.0.1-bullseye as rust
+
+RUN ls /app/lib
+
+FROM --platform=$BUILDPLATFORM golang:1.19 as builder
 
 ARG VERSION=v0.0.0
 
-RUN apk add --no-cache make gcc musl-dev linux-headers git jq bash
+RUN apt-get update && apt-get install -y \
+    git \
+    jq \
+    make \
+    bash \
+    openssl \
+    libssl-dev \
+    protobuf-compiler \
+    pkg-config \
+    cbindgen \
+    clang
+
+COPY --from=rust /app/lib/ /app/lib/
+RUN mv /app/lib/libnear-da-op-rpc-sys.h /app/lib/libnear-da-op-rpc.h
+RUN cat /app/lib/libnear-da-op-rpc.h
 
 # build op-proposer with the shared go.mod & go.sum files
-COPY ./op-proposer /app/op-proposer
-COPY ./op-celestia /app/op-celestia
-COPY ./op-bindings /app/op-bindings
-COPY ./op-node /app/op-node
-COPY ./op-service /app/op-service
-COPY ./op-signer /app/op-signer
-COPY ./go.mod /app/go.mod
-COPY ./go.sum /app/go.sum
-COPY ./.git /app/.git
+COPY ./optimism/op-proposer /app/op-proposer
+COPY ./optimism/op-celestia /app/op-celestia
+COPY ./optimism/op-bindings /app/op-bindings
+COPY ./optimism/op-node /app/op-node
+COPY ./optimism/op-service /app/op-service
+COPY ./optimism/op-signer /app/op-signer
+COPY ./optimism/go.mod /app/go.mod
+COPY ./optimism/go.sum /app/go.sum
+COPY ./optimism/.git /app/.git
+
+# Copy da rpc
+COPY ./optimism/go.work /app/go.work
+COPY ./da-rpc /da-rpc
+RUN mkdir -p /da-rpc/lib
+
+COPY --from=rust /app/lib/libnear-da-op-rpc-sys.h /da-rpc/lib/
+COPY --from=rust /app/lib/libnear_da_op_rpc_sys.so /da-rpc/lib/
+RUN cat /da-rpc/lib/libnear-da-op-rpc-sys.h
+RUN ls /da-rpc/lib -l
 
 WORKDIR /app/op-proposer
 
@@ -24,14 +52,18 @@ ARG TARGETOS TARGETARCH
 RUN make op-proposer VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
 RUN mv /app/op-proposer/bin/op-proposer /
-RUN rm -rf /app
 
-FROM alpine:3.15
+FROM debian:bookworm-slim
 
 COPY --from=builder /op-proposer /usr/local/bin
+COPY --from=builder /da-rpc/lib /usr/local/lib/
 
-RUN mkdir -p /root/.near-credentials/testnet
-RUN mkdir -p /root/.near-credentials/mainnet
-RUN mkdir -p /root/.near-credentials/localnet
+RUN apt-get update && apt-get install -y \
+    openssl \
+    libssl-dev \
+    ca-certificates \
+    protobuf-compiler
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 CMD ["op-proposer"]

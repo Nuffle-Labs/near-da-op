@@ -2,7 +2,6 @@ package derive
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/ethereum-optimism/optimism/op-celestia/celestia"
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 )
@@ -140,18 +138,13 @@ func DataFromEVMTransactions(config *rollup.Config, daCfg *rollup.DAConfig, batc
 			}
 
 			if daCfg != nil {
-				frameRef := celestia.FrameRef{}
-				frameRef.UnmarshalBinary(tx.Data())
+				blob, err := daCfg.Get(tx.Data(), (uint32)(j))
 				if err != nil {
-					log.Warn("unable to decode frame reference", "index", j, "err", err)
+					log.Error("failed to get data from near", "index", j, "err", err)
 					return nil, err
 				}
-				log.Info("requesting data from celestia", "namespace", hex.EncodeToString(daCfg.Namespace), "height", frameRef.BlockHeight)
-				blob, err := daCfg.Client.Blob.Get(context.Background(), frameRef.BlockHeight, daCfg.Namespace, frameRef.TxCommitment)
-				if err != nil {
-					return nil, NewResetError(fmt.Errorf("failed to resolve frame from celestia: %w", err))
-				}
-				out = append(out, blob.Data)
+
+				out = append(out, blob)
 			} else {
 				out = append(out, tx.Data())
 			}

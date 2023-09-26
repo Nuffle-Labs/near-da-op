@@ -46,10 +46,10 @@ var (
 		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_CONTRACT"),
 	}
 	DaKeypathFlag = cli.StringFlag{
-		Name:     "da-key-path",
+		Name:     "da-key",
 		Required: true,
-		Usage:    "Key path for sending messages to the DA node",
-		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_KEY_PATH"),
+		Usage:    "Key for sending messages to the DA node",
+		EnvVar:   opservice.PrefixEnvVar(envVarPrefix, "DA_KEY"),
 	}
 	SubSafetyMarginFlag = cli.Uint64Flag{
 		Name: "sub-safety-margin",

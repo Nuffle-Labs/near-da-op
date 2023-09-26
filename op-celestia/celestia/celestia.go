@@ -2,7 +2,6 @@ package celestia
 
 import (
 	"encoding"
-	"encoding/binary"
 	"errors"
 )
 
@@ -19,7 +18,7 @@ type Framer interface {
 // FrameRef contains the reference to the specific frame on celestia and
 // satisfies the Framer interface.
 type FrameRef struct {
-	BlockHeight  uint64
+	TxId  []byte
 	TxCommitment []byte
 }
 
@@ -30,18 +29,18 @@ var _ Framer = &FrameRef{}
 //
 //	----------------------------------------
 //
-// | 8 byte uint64  |  32 byte commitment   |
+// | 32 byte txid  |  32 byte commitment   |
 //
 //	----------------------------------------
 //
-// | <-- height --> | <-- commitment -->    |
+// | <-- txid --> | <-- commitment -->    |
 //
 //	----------------------------------------
 func (f *FrameRef) MarshalBinary() ([]byte, error) {
-	ref := make([]byte, 8+len(f.TxCommitment))
+	ref := make([]byte, len(f.TxId)+len(f.TxCommitment))
 
-	binary.LittleEndian.PutUint64(ref, f.BlockHeight)
-	copy(ref[8:], f.TxCommitment)
+	copy(ref[:32], f.TxId)
+	copy(ref[32:], f.TxCommitment)
 
 	return ref, nil
 }
@@ -51,18 +50,18 @@ func (f *FrameRef) MarshalBinary() ([]byte, error) {
 //
 //	----------------------------------------
 //
-// | 8 byte uint64  |  32 byte commitment   |
+// | 32 byte txid  |  32 byte commitment   |
 //
 //	----------------------------------------
 //
-// | <-- height --> | <-- commitment -->    |
+// | <-- txid --> | <-- commitment -->    |
 //
 //	----------------------------------------
 func (f *FrameRef) UnmarshalBinary(ref []byte) error {
-	if len(ref) <= 8 {
+	if len(ref) <= 63 {
 		return ErrInvalidSize
 	}
-	f.BlockHeight = binary.LittleEndian.Uint64(ref[:8])
-	f.TxCommitment = ref[8:]
+	f.TxId = ref[:32]
+	f.TxCommitment = ref[32:]
 	return nil
 }

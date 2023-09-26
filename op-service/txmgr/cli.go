@@ -33,7 +33,7 @@ const (
 	ReceiptQueryIntervalFlagName      = "txmgr.receipt-query-interval"
 	DaAccountFlagName                 = "da-account"
 	DaContractFlagName                = "da-contract"
-	DaKeyPathFlagName                 = "da-key-path"
+	DaKeyFlagName                     = "da-key"
 	NamespaceIdFlagName               = "namespace-id"
 	AuthTokenFlagName                 = "auth-token"
 )
@@ -114,10 +114,10 @@ func CLIFlags(envPrefix string) []cli.Flag {
 			Value:  12 * time.Second,
 			EnvVar: opservice.PrefixEnvVar(envPrefix, "TXMGR_RECEIPT_QUERY_INTERVAL"),
 		},
-		cli.StringFlag{
+		cli.UintFlag{
 			Name:   NamespaceIdFlagName,
 			Usage:  "Namespace ID of the DA layer",
-			Value:  "000008e5f679bf7116cb",
+			Value:  55,
 			EnvVar: opservice.PrefixEnvVar(envPrefix, "NAMESPACE_ID"),
 		},
 	}, client.CLIFlags(envPrefix)...)
@@ -140,8 +140,8 @@ type CLIConfig struct {
 	TxNotInMempoolTimeout     time.Duration
 	DaAccount                 string
 	DaContract                string
-	DaKeyPath                 string
-	NamespaceId               string
+	DaKey                     string
+	NamespaceId               uint32
 	AuthToken                 string
 }
 
@@ -191,8 +191,8 @@ func ReadCLIConfig(ctx *cli.Context) CLIConfig {
 		TxNotInMempoolTimeout:     ctx.GlobalDuration(TxNotInMempoolTimeoutFlagName),
 		DaAccount:                 ctx.GlobalString(DaAccountFlagName),
 		DaContract:                ctx.GlobalString(DaContractFlagName),
-		DaKeyPath:                 ctx.GlobalString(DaKeyPathFlagName),
-		NamespaceId:               ctx.GlobalString(NamespaceIdFlagName),
+		DaKey:                     ctx.GlobalString(DaKeyFlagName),
+		NamespaceId:               uint32(ctx.GlobalUint(NamespaceIdFlagName)),
 	}
 }
 
@@ -283,8 +283,8 @@ type Config struct {
 
 	// Account is the account used to sign transactions.
 	DaAccount string
-	// KeyPath is the path to the key used to sign transactions.
-	DaKeyPath string
+	// Key is the key used to sign transactions.
+	DaKey string
 	// Contract is the address of the Data Availability contract.
 	DaContract string
 

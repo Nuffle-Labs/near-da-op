@@ -2,7 +2,6 @@ package txmgr
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -12,10 +11,6 @@ import (
 	"sync"
 	"time"
 
-	openrpc "github.com/dndll/near-openrpc"
-	"github.com/dndll/near-openrpc/types/blob"
-	openrpcns "github.com/dndll/near-openrpc/types/namespace"
-	"github.com/dndll/near-openrpc/types/share"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
@@ -23,8 +18,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 
-	"github.com/ethereum-optimism/optimism/op-celestia/celestia"
 	"github.com/ethereum-optimism/optimism/op-service/txmgr/metrics"
+
+	near "github.com/near/rollup-data-availability/near-da-rpc"
 )
 
 // Geth defaults the priceBump to 10
@@ -83,6 +79,12 @@ type ETHBackend interface {
 	EstimateGas(ctx context.Context, msg ethereum.CallMsg) (uint64, error)
 }
 
+/* TODO: reuse this */
+type Namespace struct {
+	Version uint8
+	Id      uint32
+}
+
 // SimpleTxManager is a implementation of TxManager that performs linear fee
 // bumping of a tx until it confirms.
 type SimpleTxManager struct {
@@ -90,8 +92,8 @@ type SimpleTxManager struct {
 	name    string
 	chainID *big.Int
 
-	daClient  *openrpc.Client
-	namespace openrpcns.Namespace
+	daClient  *near.Config
+	namespace Namespace
 
 	backend ETHBackend
 	l       log.Logger
@@ -111,35 +113,23 @@ func NewSimpleTxManager(name string, l log.Logger, m metrics.TxMetricer, cfg CLI
 	if err != nil {
 		return nil, err
 	}
-	config, err := openrpc.BuildConfig("testnet")
-	if err != nil {
-		return nil, err
-	}
-	config.KeyPath = cfg.DaKeyPath
-	daClient, err := openrpc.NewClient(context.Background(), *config, cfg.DaContract, cfg.DaAccount)
-	if err != nil {
-		return nil, err
-	}
 
-	if cfg.NamespaceId == "" {
+	if cfg.NamespaceId == 0 {
 		return nil, errors.New("namespace id cannot be blank")
 	}
-	nsBytes, err := hex.DecodeString(cfg.NamespaceId)
-	if err != nil {
-		return nil, err
-	}
 
-	namespace, err := share.NewBlobNamespaceV0(nsBytes)
+	daConfig, err := near.NewConfig(cfg.DaContract, cfg.DaContract, cfg.DaKey, cfg.NamespaceId)
 	if err != nil {
 		return nil, err
 	}
+	namespaceVersion := 0
 
 	return &SimpleTxManager{
 		chainID:   conf.ChainID,
 		name:      name,
 		cfg:       conf,
-		daClient:  daClient,
-		namespace: namespace.ToAppNamespace(),
+		daClient:  daConfig,
+		namespace: Namespace{Version: uint8(namespaceVersion), Id: cfg.NamespaceId},
 		backend:   conf.Backend,
 		l:         l.New("service", name),
 		metr:      m,
@@ -221,44 +211,13 @@ func (m *SimpleTxManager) send(ctx context.Context, candidate TxCandidate) (*typ
 		ctx, cancel = context.WithTimeout(ctx, m.cfg.TxSendTimeout)
 		defer cancel()
 	}
-	// TODO: this is a hack to route only batcher transactions through celestia
-	// SimpleTxManager is used by both batcher and proposer but since proposer
-	// writes to a smart contract, we overwrite _only_ batcher candidate as the
-	// frame pointer to celestia, while retaining the proposer pathway that
-	// writes the state commitment data to ethereum.
-	if candidate.To.Hex() == "0xfF00000000000000000000000000000000000000" {
-		dataBlob, err := blob.NewBlobV0(m.namespace.Bytes(), candidate.TxData)
-		if err != nil {
-			m.l.Warn("unable to create blob", "err", err)
-			return nil, err
-		}
-		com, err := blob.CreateCommitment(dataBlob)
-		dataBlob.Commitment = com
-		if err != nil {
-			m.l.Warn("unable to create blob commitment", "err", err)
-			return nil, err
-		}
-		// err = m.daClient.Header.SyncWait(ctx)
-		// if err != nil {
-		// 	m.l.Warn("unable to wait for header sync", "err", err)
-		// 	return nil, err
-		// }
-		res, err := m.daClient.Submit(ctx, []*blob.Blob{dataBlob})
-		if err != nil {
-			m.l.Warn("unable to publish tx to near", "err", err)
-			return nil, err
-		}
-		fmt.Printf("res: %v\n", res)
-		if res.Code != 0 || res.TxHash == "" || res.Height == 0 {
-			m.l.Warn("unexpected response from near got", "res.Code", res.Code, "res.TxHash", res.TxHash, "res.Height", res.Height)
-			return nil, errors.New("unexpected response code")
-		}
-		frameRef := celestia.FrameRef{
-			BlockHeight:  res.Height,
-			TxCommitment: com,
-		}
-		frameRefData, _ := frameRef.MarshalBinary()
-		candidate = TxCandidate{TxData: frameRefData, To: candidate.To, GasLimit: candidate.GasLimit}
+
+	maybeFrameRef, err := m.daClient.Submit(candidate.To.Hex(), candidate.TxData)
+	if err != nil {
+		m.l.Error("unable to publish blob to near", "err", err)
+		return nil, err
+	} else {
+		candidate.TxData = maybeFrameRef
 	}
 
 	tx, err := m.craftTx(ctx, candidate)

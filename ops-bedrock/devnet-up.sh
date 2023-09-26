@@ -29,16 +29,11 @@
 
 set -eu
 
-L1_URL="http://localhost:8545"
-L2_URL="http://localhost:9545"
+# Source environment variables from .env
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-OP_NODE="$PWD/op-node"
-CONTRACTS_BEDROCK="$PWD/packages/contracts-bedrock"
-NETWORK=devnetL1
-DEVNET="$PWD/.devnet"
-
-COMPOSE="docker-compose"
-COMPOSE="podman-compose"
+echo "Sourcing environment variables from $SCRIPT_DIR/.env"
+source "$SCRIPT_DIR"/.env
 
 # Helper method that waits for a given URL to be up. Can't use
 # cURL's built-in retry logic because connection reset errors
@@ -60,18 +55,20 @@ function wait_up {
   echo "Done!"
 }
 
-mkdir -p ./.devnet
+DEVNET=$SCRIPT_DIR/../$DEVNET
+mkdir -p "$DEVNET"
 
 # Regenerate the L1 genesis file if necessary. The existence of the genesis
 # file is used to determine if we need to recreate the devnet's state folder.
 if [ ! -f "$DEVNET/done" ]; then
-  echo "Regenerating genesis files"
+  echo "Regenerating genesis files, target: $DEVNET"
 
   TIMESTAMP=$(date +%s | xargs printf '0x%x')
   cat "$CONTRACTS_BEDROCK/deploy-config/devnetL1.json" | jq -r ".l1GenesisBlockTimestamp = \"$TIMESTAMP\"" > /tmp/bedrock-devnet-deploy-config.json
 
   (
     cd "$OP_NODE"
+    echo "Compiling contracts to $DEVNET"
     go run cmd/main.go genesis devnet \
         --deploy-config /tmp/bedrock-devnet-deploy-config.json \
         --outfile.l1 $DEVNET/genesis-l1.json \
@@ -94,24 +91,15 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up L2..."
-  $COMPOSE -f docker-compose-devnet.yml up -d l2
+  $COMPOSE -f docker-compose-devnet.yml up -d l2 l22
   wait_up $L2_URL
 )
-
-L2OO_ADDRESS="0x6900000000000000000000000000000000000000"
 
 # Bring up everything else.
 (
   cd ops-bedrock
   echo "Bringing up devnet..."
-  # $COMPOSE -f docker-compose-devnet.yml up -d da
-  # wait_up http://localhost:26659/header/1
-  # export CELESTIA_NODE_AUTH_TOKEN="$(docker exec ops-bedrock-da-1 celestia bridge auth admin --node.store /bridge)"
-  L2OO_ADDRESS="$L2OO_ADDRESS" \
-      $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher
-
-  echo "Bringing up stateviz webserver..."
-  $COMPOSE -f docker-compose-devnet.yml up -d stateviz
+  $COMPOSE -f docker-compose-devnet.yml up -d op-proposer op-batcher stateviz light-client op-node2
 )
 
 echo "Devnet ready."

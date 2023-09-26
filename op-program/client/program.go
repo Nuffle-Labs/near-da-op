@@ -18,6 +18,8 @@ import (
 	"github.com/ethereum-optimism/optimism/op-program/client/l2"
 	oppio "github.com/ethereum-optimism/optimism/op-program/io"
 	"github.com/ethereum-optimism/optimism/op-program/preimage"
+
+	near "github.com/near/rollup-data-availability/near-da-rpc"
 )
 
 // Main executes the client program in a detached context and exits the current process.
@@ -64,7 +66,7 @@ func RunProgram(logger log.Logger, bootOracle io.Reader, preimageOracle io.ReadW
 }
 
 // runDerivation executes the L2 state transition, given a minimal interface to retrieve data.
-func runDerivation(logger log.Logger, cfg *rollup.Config, daCfg *rollup.DAConfig, l2Cfg *params.ChainConfig, l1Head common.Hash, l2Head common.Hash, l2Claim common.Hash, l2ClaimBlockNum uint64, l1Oracle l1.Oracle, l2Oracle l2.Oracle) error {
+func runDerivation(logger log.Logger, cfg *rollup.Config, daCfg *near.Config, l2Cfg *params.ChainConfig, l1Head common.Hash, l2Head common.Hash, l2Claim common.Hash, l2ClaimBlockNum uint64, l1Oracle l1.Oracle, l2Oracle l2.Oracle) error {
 	l1Source := l1.NewOracleL1Client(logger, l1Oracle, l1Head)
 	engineBackend, err := l2.NewOracleBackedL2Chain(logger, l2Oracle, l2Cfg, l2Head)
 	if err != nil {
