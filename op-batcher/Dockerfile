@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/op-rpc:0.0.1-bullseye as rust
+FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/op-rpc:latest as rust
 
 RUN ls /app/lib
 

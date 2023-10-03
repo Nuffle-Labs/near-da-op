@@ -244,3 +244,4 @@ services:
     volumes:
       - near_lc:/var/db
       - ${PWD}/light-client.toml:/var/light-client.toml
+

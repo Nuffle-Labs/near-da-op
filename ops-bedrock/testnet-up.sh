@@ -24,21 +24,16 @@
 # This script is safe to run multiple times. It stores state in `.devnet`, and
 # contracts-bedrock/deployments/devnetL1.
 #
-# Don't run this script directly. Run it using the makefile, e.g. `make testnet-up`.
-# To clean up your devnet, run `make testnet-clean`.
+# Don't run this script directly. Run it using the makefile, e.g. `make devnet-up`.
+# To clean up your devnet, run `make devnet-clean`.
 
 set -eu
 
-L1_URL="http://localhost:8545"
-L2_URL="http://localhost:9545"
+# Source environment variables from .env
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-OP_NODE="$PWD/op-node"
-CONTRACTS_BEDROCK="$PWD/packages/contracts-bedrock"
-NETWORK=devnetL1
-DEVNET="$PWD/.devnet"
-
-COMPOSE="docker-compose"
-COMPOSE="podman-compose"
+echo "Sourcing environment variables from $SCRIPT_DIR/.env"
+source "$SCRIPT_DIR"/.env
 
 # Helper method that waits for a given URL to be up. Can't use
 # cURL's built-in retry logic because connection reset errors
@@ -60,20 +55,22 @@ function wait_up {
   echo "Done!"
 }
 
-mkdir -p ./.devnet
+DEVNET=$SCRIPT_DIR/../.testnet
+mkdir -p "$DEVNET"
 
 # Regenerate the L1 genesis file if necessary. The existence of the genesis
 # file is used to determine if we need to recreate the devnet's state folder.
 if [ ! -f "$DEVNET/done" ]; then
-  echo "Regenerating genesis files"
+  echo "Regenerating genesis files, target: $DEVNET"
 
   TIMESTAMP=$(date +%s | xargs printf '0x%x')
-  cat "$CONTRACTS_BEDROCK/deploy-config/devnetL1.json" | jq -r ".l1GenesisBlockTimestamp = \"$TIMESTAMP\"" > /tmp/bedrock-devnet-deploy-config.json
+  cat "$CONTRACTS_BEDROCK/deploy-config/devnetL1.json" | jq -r ".l1GenesisBlockTimestamp = \"$TIMESTAMP\"" > /tmp/bedrock-testnet-deploy-config.json
 
   (
     cd "$OP_NODE"
+    echo "Compiling contracts to $DEVNET"
     go run cmd/main.go genesis devnet \
-        --deploy-config /tmp/bedrock-devnet-deploy-config.json \
+        --deploy-config /tmp/bedrock-testnet-deploy-config.json \
         --outfile.l1 $DEVNET/genesis-l1.json \
         --outfile.l2 $DEVNET/genesis-l2.json \
         --outfile.rollup $DEVNET/rollup.json
@@ -94,21 +91,16 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up L2..."
-  $COMPOSE -f docker-compose-testnet.yml up -d l2
+  $COMPOSE -f docker-compose-testnet.yml up -d l2 l22
   wait_up $L2_URL
 )
-
-L2OO_ADDRESS="0x6900000000000000000000000000000000000000"
 
 # Bring up everything else.
 (
   cd ops-bedrock
-  echo "Bringing up devnet..."
-  L2OO_ADDRESS="$L2OO_ADDRESS" \
-      $COMPOSE -f docker-compose-testnet.yml up -d op-proposer op-batcher
-
-  echo "Bringing up stateviz webserver..."
-  $COMPOSE -f docker-compose-testnet.yml up -d stateviz
+  echo "Bringing up net..."
+  $COMPOSE -f docker-compose-testnet.yml up -d
 )
+
 
 echo "Testnet ready."

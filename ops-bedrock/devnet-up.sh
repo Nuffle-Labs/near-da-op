@@ -55,7 +55,7 @@ function wait_up {
   echo "Done!"
 }
 
-DEVNET=$SCRIPT_DIR/../$DEVNET
+DEVNET=$SCRIPT_DIR/../.devnet
 mkdir -p "$DEVNET"
 
 # Regenerate the L1 genesis file if necessary. The existence of the genesis
