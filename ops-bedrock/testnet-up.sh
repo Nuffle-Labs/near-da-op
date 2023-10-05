@@ -82,7 +82,6 @@ fi
 (
   cd ops-bedrock
   echo "Bringing up L1..."
-  DOCKER_BUILDKIT=1 $COMPOSE -f docker-compose-testnet.yml build
   $COMPOSE -f docker-compose-testnet.yml up -d l1
   wait_up $L1_URL
 )

@@ -159,3 +159,6 @@ tag-bedrock-go-modules:
 update-op-geth:
 	./ops/scripts/update-op-geth.py
 .PHONY: update-op-geth
+
+substitute-workspace:
+	sed -i 's|../../gopkg/da-rpc|./da-rpc|g' ./go.work

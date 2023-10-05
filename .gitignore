@@ -56,6 +56,7 @@ ops-bedrock-goerli/terraform
 *.log
 
 .devnet
+.testnet
 
 # Ignore local fuzzing results
 **/testdata/fuzz/
@@ -71,3 +72,5 @@ __pycache__
 
 # Ignore echidna artifacts
 crytic-export
+
+da-rpc
