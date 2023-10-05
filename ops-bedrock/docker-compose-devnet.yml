@@ -51,8 +51,8 @@ services:
       - l1
       - l2
     build:
-      context: ../../
-      dockerfile: ./optimism/op-node/Dockerfile
+      context: ../
+      dockerfile: ./op-node/Dockerfile
     env_file:
       - .env
     command: >
@@ -120,8 +120,8 @@ services:
       - l1
       - l22
     build:
-      context: ../../
-      dockerfile: ./optimism/op-node/Dockerfile
+      context: ../
+      dockerfile: ./op-node/Dockerfile
     env_file:
       - .env
     command: >
@@ -168,8 +168,8 @@ services:
       - l2
       - op-node
     build:
-      context: ../../
-      dockerfile: ./optimism/op-proposer/Dockerfile
+      context: ../
+      dockerfile: ./op-proposer/Dockerfile
     env_file:
       - .env
     ports:
@@ -193,8 +193,8 @@ services:
       op-node:
         condition: service_started
     build:
-      context: ../../
-      dockerfile: ./optimism/op-batcher/Dockerfile
+      context: ../
+      dockerfile: ./op-batcher/Dockerfile
     env_file:
       - .env
     ports:

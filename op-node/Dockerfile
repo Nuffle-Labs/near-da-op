@@ -1,6 +1,7 @@
-FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/op-rpc:latest as rust
+FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/da-rpc:latest as rust
 
-RUN ls /app/lib
+RUN ls /lib
+RUN ls /gopkg/da-rpc
 
 FROM --platform=$BUILDPLATFORM golang:1.19 as builder
 
@@ -19,27 +20,24 @@ RUN apt-get update && apt-get install -y \
     clang
 
 # build op-node with the shared go.mod & go.sum files
-COPY ./optimism/op-node /app/op-node
-COPY ./optimism/op-celestia /app/op-celestia
-COPY ./optimism/op-chain-ops /app/op-chain-ops
-COPY ./optimism/op-service /app/op-service
-COPY ./optimism/op-bindings /app/op-bindings
-COPY ./optimism/go.mod /app/go.mod
-COPY ./optimism/go.sum /app/go.sum
-COPY ./optimism/.git /app/.git
+COPY ./op-node /app/op-node
+COPY ./op-celestia /app/op-celestia
+COPY ./op-chain-ops /app/op-chain-ops
+COPY ./op-service /app/op-service
+COPY ./op-bindings /app/op-bindings
+COPY ./go.mod /app/go.mod
+COPY ./go.sum /app/go.sum
+COPY ./.git /app/.git
 
 # Copy da rpc
-COPY ./optimism/go.work /app/go.work
-COPY ./da-rpc /da-rpc
-RUN mkdir -p /da-rpc/lib
+COPY --from=rust /gopkg/da-rpc /app/da-rpc
+COPY ./go.work /app/go.work
 
-COPY --from=rust /app/lib/libnear-da-op-rpc-sys.h /da-rpc/lib/
-COPY --from=rust /app/lib/libnear_da_op_rpc_sys.so /da-rpc/lib/
-RUN cat /da-rpc/lib/libnear-da-op-rpc-sys.h
-RUN ls /da-rpc/lib -l
+WORKDIR /app
+COPY ./Makefile /app/Makefile
+RUN make substitute-workspace
 
 WORKDIR /app/op-node
-
 RUN go mod download
 
 ARG TARGETOS TARGETARCH
@@ -51,7 +49,7 @@ RUN mv /app/op-node/bin/op-node /
 FROM debian:bookworm-slim
 
 COPY --from=builder /op-node /usr/local/bin
-COPY --from=builder /da-rpc/lib /usr/local/lib/
+COPY --from=builder /app/da-rpc/lib/* /usr/local/lib/
 
 RUN apt-get update && apt-get install -y \
     openssl \
