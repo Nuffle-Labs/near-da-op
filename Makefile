@@ -65,6 +65,9 @@ nuke: clean devnet-clean
 	git clean -Xdf
 .PHONY: nuke
 
+devnet-genesis:
+	@bash ./ops-bedrock/devnet-genesis-entrypoint.sh
+
 devnet-up:
 	@bash ./ops-bedrock/devnet-up.sh
 .PHONY: devnet-up

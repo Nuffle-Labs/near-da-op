@@ -1,0 +1,17 @@
+FROM --platform=$BUILDPLATFORM golang:1.19 as builder
+
+ARG VERSION=v0.0.0
+
+RUN apt-get update && apt-get install -y \
+    git \
+    jq \
+    make \
+    bash \
+    openssl \
+    libssl-dev \
+    protobuf-compiler \
+    pkg-config \
+    cbindgen \
+    clang
+
+
