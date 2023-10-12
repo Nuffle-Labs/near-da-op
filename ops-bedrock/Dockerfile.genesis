@@ -12,6 +12,6 @@ RUN apt-get update && apt-get install -y \
     protobuf-compiler \
     pkg-config \
     cbindgen \
-    clang \
+    clang
 
 
