@@ -154,7 +154,6 @@ clean-node-modules:
 	rm -rf node_modules
 	rm -rf packages/**/node_modules
 
-
 tag-bedrock-go-modules:
 	./ops/scripts/tag-bedrock-go-modules.sh $(BEDROCK_TAGS_REMOTE) $(VERSION)
 .PHONY: tag-bedrock-go-modules
@@ -162,4 +161,51 @@ tag-bedrock-go-modules:
 update-op-geth:
 	./ops/scripts/update-op-geth.py
 .PHONY: update-op-geth
+
+TAG_PREFIX := us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability
+IMAGE_TAG := 0.1.0
+
+op-devnet-genesis-docker:
+	DOCKER_BUILDKIT=1 docker build --progress=plain -t $(TAG_PREFIX)/op-genesis-builder:$(IMAGE_TAG) -f ops-bedrock/Dockerfile.genesis ./
+	docker tag $(TAG_PREFIX)/op-genesis-builder:$(IMAGE_TAG) $(TAG_PREFIX)/op-genesis-builder:latest
+.PHONY: op-devnet-genesis-docker
+
+op-devnet-genesis:
+	docker run -it --rm --platform linux/arm64 -v ${PWD}:/work -w /work $(TAG_PREFIX)/op-genesis-builder make devnet-genesis
+.PHONY: op-devnet-genesis
+
+op-devnet-da-logs:
+	docker compose -f ops-bedrock/docker-compose-devnet.yml logs op-batcher | grep NEAR
+	docker compose -f ops-bedrock/docker-compose-devnet.yml logs op-node | grep NEAR
+
+COMMAND = docker buildx build -t
+bedrock-images:
+	$(COMMAND) "$(TAG_PREFIX)/op-node:$(IMAGE_TAG)" -f op-node/Dockerfile .
+	docker tag "$(TAG_PREFIX)/op-node:$(IMAGE_TAG)" "$(TAG_PREFIX)/op-node:latest"
+
+	$(COMMAND) "$(TAG_PREFIX)/op-batcher:$(IMAGE_TAG)" -f op-batcher/Dockerfile .
+	docker tag "$(TAG_PREFIX)/op-batcher:$(IMAGE_TAG)" "$(TAG_PREFIX)/op-batcher:latest"
+
+	$(COMMAND) "$(TAG_PREFIX)/op-proposer:$(IMAGE_TAG)" -f op-proposer/Dockerfile .
+	docker tag "$(TAG_PREFIX)/op-proposer:$(IMAGE_TAG)" "$(TAG_PREFIX)/op-proposer:latest"
+
+	$(COMMAND) "$(TAG_PREFIX)/op-l1:$(IMAGE_TAG)" -f ops-bedrock/Dockerfile.l1 ops-bedrock
+	docker tag "$(TAG_PREFIX)/op-l1:$(IMAGE_TAG)" "$(TAG_PREFIX)/op-l1:latest"
+
+	$(COMMAND) "$(TAG_PREFIX)/op-l2:$(IMAGE_TAG)" -f ops-bedrock/Dockerfile.l2 ops-bedrock
+	docker tag "$(TAG_PREFIX)/op-l2:$(IMAGE_TAG)" "$(TAG_PREFIX)/op-l2:latest"
+
+	$(COMMAND) "$(TAG_PREFIX)/op-stateviz:$(IMAGE_TAG)" -f ops-bedrock/Dockerfile.stateviz  .
+	docker tag "$(TAG_PREFIX)/op-stateviz:$(IMAGE_TAG)" "$(TAG_PREFIX)/op-stateviz:latest"
+.PHONY: bedrock-images
+
+push-bedrock-images:
+	docker push "$(TAG_PREFIX)/op-node:$(IMAGE_TAG)"
+	docker push "$(TAG_PREFIX)/op-batcher:$(IMAGE_TAG)"
+	docker push "$(TAG_PREFIX)/op-proposer:$(IMAGE_TAG)"
+	docker push "$(TAG_PREFIX)/op-l1:$(IMAGE_TAG)"
+	docker push "$(TAG_PREFIX)/op-l2:$(IMAGE_TAG)"
+	docker push "$(TAG_PREFIX)/op-stateviz:$(IMAGE_TAG)"
+.PHONY: push-bedrock-images
+
 
