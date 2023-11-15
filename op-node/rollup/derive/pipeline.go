@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 
-	near "github.com/near/rollup-data-availability/near-da-rpc"
+	near "github.com/near/rollup-data-availability/gopkg/da-rpc"
 )
 
 type Metrics interface {

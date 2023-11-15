@@ -35,7 +35,6 @@ COPY ./go.work /app/go.work
 
 WORKDIR /app
 COPY ./Makefile /app/Makefile
-RUN make substitute-workspace
 
 WORKDIR /app/op-node
 RUN go mod download
