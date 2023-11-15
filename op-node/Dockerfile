@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/da-rpc:latest as rust
+FROM --platform=$BUILDPLATFORM ghcr.io/near/rollup-data-availability/da-rpc:latest as rust
 
 RUN ls /lib
 RUN ls /gopkg/da-rpc
@@ -30,7 +30,7 @@ COPY ./go.sum /app/go.sum
 COPY ./.git /app/.git
 
 # Copy da rpc
-COPY --from=rust /gopkg/da-rpc /app/da-rpc
+COPY --from=rust /gopkg/da-rpc/lib/ /usr/local/lib
 COPY ./go.work /app/go.work
 
 WORKDIR /app
@@ -47,8 +47,8 @@ RUN mv /app/op-node/bin/op-node /
 
 FROM debian:bookworm-slim
 
+COPY --from=rust /gopkg/da-rpc/lib/ /usr/local/lib
 COPY --from=builder /op-node /usr/local/bin
-COPY --from=builder /app/da-rpc/lib/* /usr/local/lib/
 
 RUN apt-get update && apt-get install -y \
     openssl \
