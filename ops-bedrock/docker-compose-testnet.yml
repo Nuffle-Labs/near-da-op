@@ -220,7 +220,7 @@ services:
       - op_log:/op_log:ro
 
   light-client:
-    image: us-docker.pkg.dev/pagoda-solutions-dev/rollup-data-availability/light-client:latest
+    image: ghcr.io/near/near-light-client/light-client:latest
     environment:
       RUST_LOG: info,near_offchain_light_client=debug
       NEAR_LIGHT_CLIENT_CONFIG_FILE: /var/light-client.toml

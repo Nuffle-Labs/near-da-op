@@ -20,7 +20,7 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-service/txmgr/metrics"
 
-	near "github.com/near/rollup-data-availability/near-da-rpc"
+	near "github.com/near/rollup-data-availability/gopkg/da-rpc"
 )
 
 // Geth defaults the priceBump to 10

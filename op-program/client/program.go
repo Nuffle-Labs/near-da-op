@@ -19,7 +19,7 @@ import (
 	oppio "github.com/ethereum-optimism/optimism/op-program/io"
 	"github.com/ethereum-optimism/optimism/op-program/preimage"
 
-	near "github.com/near/rollup-data-availability/near-da-rpc"
+	near "github.com/near/rollup-data-availability/gopkg/da-rpc"
 )
 
 // Main executes the client program in a detached context and exits the current process.

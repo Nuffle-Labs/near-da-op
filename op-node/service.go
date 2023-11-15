@@ -24,7 +24,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
 	"github.com/ethereum-optimism/optimism/op-node/rollup/driver"
 
-	near "github.com/near/rollup-data-availability/near-da-rpc"
+	near "github.com/near/rollup-data-availability/gopkg/da-rpc"
 )
 
 // NewConfig creates a Config from the provided flags or environment variables.
