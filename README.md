@@ -6,14 +6,14 @@
   <h3><a href="https://optimism.io">Optimism</a> is a low-cost and lightning-fast Ethereum L2 blockchain, built with the OP Stack.</h3>
   <br />
   <h3>+</h3>
-  <a href="https://celestia.org"><img alt="Celestia" src="docs/op-stack/src/assets/docs/understand/Celestia-logo-color-color.svg" width=600></a>
-  <h3><a href="https://celestia.org">Celestia</a> is a modular consensus and data network, built to enable anyone to easily deploy their own blockchain with minimal overhead.</h3>
+  <a href="https://near.org"><img alt="NEAR Protocol" src="docs/op-stack/src/assets/docs/understand/near-logo.svg" width=600></a>
+  <h3> <a href="https://near.org">NEAR</a> is a low-cost, usable, and scalable layer-one blockchain that offers cheap data availability layer.</h3>
   <br />
 </div>
 
-## Celestia + OP Stack tutorial
+## NEAR DA + OP Stack tutorial
 
-If you're looking to run the OP Stack + Celestia setup for this repository, please visit the [Optimism & Celestia guides and tutorials](https://docs.celestia.org/developers/intro-to-op-stack/) to get started.
+If you're looking to run the OP Stack + NEAR DA setup for this repository, please visit the [NEAR DA guides](https://docs.near.org/data-availability/welcome) to get started.
 
 ## What are Optimism and the OP Stack?
 
@@ -25,33 +25,31 @@ Optimism addresses critical coordination failures in the crypto ecosystem, such 
 
 As Optimism evolves, the OP Stack will adapt, encompassing components ranging from blockchain infrastructure to governance systems. This software suite aims to simplify L2 blockchain creation while supporting the growth and development of the Optimism ecosystem.
 
-## What is Celestia?
+## What is NEAR?
 
-Celestia is a modular consensus and data network, built to enable anyone to easily deploy their own blockchain with minimal overhead.
+NEAR is a decentralized application platform designed to improve scalability and user experience in blockchain technology.
 
-Celestia is a minimal blockchain that only orders and publishes transactions and does not execute them. By decoupling the consensus and application execution layers, Celestia modularizes the blockchain technology stack and unlocks new possibilities for decentralized application builders. Lean more at [Celestia.org](https://celestia.org).
+Utilizing a proof-of-stake consensus mechanism, it focuses on energy efficiency and high transaction throughput. NEAR’s standout feature is sharding, which breaks the network into smaller segments for parallel processing, greatly enhancing speed and capacity.
 
-## Maintenance
-
-The maintenance guide for this repository can be found in the Wiki tab of the repository or [here](https://github.com/celestiaorg/optimism/wiki).
+This approach makes NEAR particularly appealing for developers building decentralized applications and for users seeking fast, low-cost transactions, and also for data availability for Ethereum rollups.
 
 ## Documentation
 
-If you want to build on top of Celestia, take a look at the documentation at [docs.celestia.org](https://docs.celestia.org).
-
 If you want to learn more about the OP Stack, check out the documentation at [stack.optimism.io](https://stack.optimism.io/).
+
+If you want to learn more about the NEAR Data Availability and also NEAR, check out the documentation at [near.org](https://near.org/)
 
 ## Community
 
 ### Optimism
 
-General discussion happens most frequently on the [Optimism discord](https://discord.gg/optimism).
+General discussion happens most frequently on the [Optimism Discord](https://discord.gg/optimism).
 Governance discussion can also be found on the [Optimism Governance Forum](https://gov.optimism.io/).
 
-### Celestia
+### NEAR
 
-General discussion happens most frequently on the [Celestia discord](https://discord.com/invite/YsnTPcSfWQ).
-Other discussions can be found on the [Celestia forum](https://forum.celestia.org).
+General discussion happens most frequently on the [NEAR discord](https://discord.com/invite/zfhfRpaM4m).
+Other discussions can be found on the [NEAR Governance Forum](https://gov.near.org/).
 
 <!-- ## Contributing
 
@@ -62,7 +60,7 @@ Then check out our list of [good first issues](https://github.com/ethereum-optim
 ## e2e testing
 
 This repository has updated end-to-end tests in the `op-e2e` package to work with
-Celestia as the data availability (DA) layer.
+NEAR DA as the data availability (DA) layer.
 
 Currently, the tests assume a working [Celestia devnet](https://github.com/rollkit/local-celestia-devnet) running locally:
 
@@ -80,7 +78,7 @@ make test
 
 ## Bridging
 
-If you have the OP Stack + Celestia setup running, you can test out bridging from the L1
+If you have the OP Stack + NEAR DA setup running, you can test out bridging from the L1
 to the L2.
 
 To do this, first navigate to the `packages/contracts-bedrock` directory and create a
@@ -210,3 +208,4 @@ It's strongly recommended to avoid merging PRs into develop during an active rel
 Code forked from [`go-ethereum`](https://github.com/ethereum/go-ethereum) under the name [`l2geth`](https://github.com/ethereum-optimism/optimism/tree/master/l2geth) is licensed under the [GNU GPLv3](https://gist.github.com/kn9ts/cbe95340d29fc1aaeaa5dd5c059d2e60) in accordance with the [original license](https://github.com/ethereum/go-ethereum/blob/master/COPYING).
 
 All other files within this repository are licensed under the [MIT License](https://github.com/ethereum-optimism/optimism/blob/master/LICENSE) unless stated otherwise. -->
+
